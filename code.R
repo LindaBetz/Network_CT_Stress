@@ -267,7 +267,7 @@ nrow(relevant_IDs_refresher) # 862 ==> one person does not have at least two var
 
 # create data set to calculate sample statstiscs
 desc_data_refresher <- biomarker_data_refresher %>%
-  left_join(baseline_refresher_data, by = "MRID") %>%
+  left_join(demographic_data_refresher, by = "MRID") %>%
   filter(MRID %in% relevant_IDs_refresher$MRID) %>%
   transmute(
     Age = RA1PRAGE.y,
