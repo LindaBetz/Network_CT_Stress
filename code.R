@@ -181,30 +181,30 @@ graph_original_plot <- qgraph(
   graph_original$graph,
   layout = "spring",
   theme = "Borkulo",
-  labels = TRUE,
   layout.par = list(max.delta = 10),
-  labels = c(1:15),
+  labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10),
   GLratio = 1.9,
-  pie = rep(1, 15),
-  pieBorder = 0.2,
-  pieColor = recode(
+  groups =  recode(
     wtc$membership,
-    `2` = "#D3D3D3",
-    `1` = "#FF9770",
-    `3` = "#FFD670"
+    `2` = "Childhood Trauma",
+    `1` = "Perceived Helplessness",
+    `3` = "Perceived Self-Efficacy"
   ),
-  groups = c(rep("1) Childhood Trauma", 5), rep("2) Perceived Stress", 10)),
   layoutOffset = c(-0.26, 0),
   layoutScale = c(0.9, 1),
   label.cex = 1.25,
   filetype = "png",
-  color = c(rep("#D3D3D3", 5),
-            rep("#5DBCD2", 10)),
-  nodeNames = colnames(graph_data),
+  color =  recode(
+    wtc$membership,
+    `2` = "#D3D3D3",
+    `1` = "#FF9770",
+    `3` = "#5DBCD2"
+  ),
+  nodeNames = colnames(graph_original$graph),
   filename = "main_figure",
-  legend.cex = 0.69,
-  legend = TRUE
+  legend.cex = 0.69
 )
+
 
 # ---------------------------- 4: Sensitvity Analyses -----------------------------
 # case-drop bootstrapping
