@@ -173,33 +173,70 @@ graph_original <- estimateNetwork(
 # estimate communities via walktrap
 g <- as.igraph(qgraph(graph_original$graph), attributes = TRUE)
 wtc <- walktrap.community(g)
-wtc$membership
 
+# layout for network
+layout_network <- as.matrix(data.frame(
+  x =  c(
+    0.702164557,
+    0.980149473,
+    0.202511180,
+    0.579496614,
+    0.500319086,
+    0.382166936,
+    0.265510012,
+    0.000000000,
+    1.000000000,
+    0.717622685,
+    0.270821989,
+    0.917685999,
+    0.715207072,
+    0.004062325,
+    0.440950384
+  ),
+  y = c(
+    0.88338016,
+    0.80279178,
+    0.78809824,
+    0.63657324,
+    1.00000000,
+    0.09806150,
+    0.33345000,
+    0.37831538,
+    0.32678846,
+    0.05273452,
+    0.61391449,
+    0.00000000,
+    0.41124686,
+    0.04156892,
+    0.24338861
+  )
+))
 
 # plot network
 graph_original_plot <- qgraph(
   graph_original$graph,
-  layout = "spring",
+  layout = layout_network,
   theme = "Borkulo",
-  layout.par = list(max.delta = 10),
   labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10),
-  GLratio = 1.9,
+  GLratio = 1.1,
   groups =  recode(
     wtc$membership,
     `2` = "Childhood Trauma",
     `1` = "Perceived Helplessness",
     `3` = "Perceived Self-Efficacy"
   ),
-  layoutOffset = c(-0.26, 0),
-  layoutScale = c(0.9, 1),
-  label.cex = 1.25,
+  layoutOffset = c(-0.05, 0),
+  layoutScale = c(1.14, 1.05),
+  label.cex = 0.99,
   filetype = "png",
-  color =  recode(
-    wtc$membership,
-    `2` = "#D3D3D3",
-    `1` = "#FF9770",
-    `3` = "#5DBCD2"
+  legend.mode="style1",
+  color =  c("grey",
+    "#EBCC2A",
+    "#78B7C5"
   ),
+  label.prop = 0.96,
+  vsize=5.1,
+  DoNotPlot=F,
   nodeNames = colnames(graph_original$graph),
   filename = "main_figure",
   legend.cex = 0.69
@@ -469,93 +506,93 @@ png(width=1200, height=450, "combined_plot.png")
 par(mfrow=c(1,3))
 qgraph(
   graph_original$graph,
-  layout = graph_original_plot$layout,
+  layout = layout_network,
   theme = "Borkulo",
-  labels = TRUE,
-  layout.par = list(max.delta = 10),
-  labels = c(1:15),
-  pie = rep(1, 15),
-  title="a) Original",
-  title.cex=3,
-  vsize = 14,
-  pieBorder = 0.3,
-  pieColor = recode(
+  labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10),
+  legend=F,
+  GLratio = 1.1,
+  groups =  recode(
     wtc$membership,
-    `2` = "#FFD670",
-    `1` = "#FF9770",
-    `3` = "#D3D3D3",
-    
+    `2` = "Childhood Trauma",
+    `1` = "Perceived Helplessness",
+    `3` = "Perceived Self-Efficacy"
   ),
-  groups = c(rep("1) Childhood Trauma", 5), rep("2) Perceived Stress", 10)),
-  label.cex = 2,
-  color = c(rep("#D3D3D3", 5),
-            rep("#5DBCD2", 10)),
-  nodeNames = colnames(graph_data),
-  legend=FALSE,
-  maximum =0.4843399,
-  minimum = 0
-  
+  layoutOffset = c(-0.05, 0),
+  layoutScale = c(1, 1.05),
+  label.cex = 0.99,
+  color =  c("grey",
+             "#EBCC2A",
+             "#78B7C5"
+  ),
+  label.prop = 0.96,
+  vsize=13,
+  DoNotPlot=F,
+  nodeNames = colnames(graph_original$graph),
+  minimum = 0,
+  maximum = 0.483,
+  title="a) Original",
+  title.cex=3
 )
 
 qgraph(
   graph_refresher$graph,
-  layout = graph_original_plot$layout,
+  layout = layout_network,
   theme = "Borkulo",
-  labels = TRUE,
-  layout.par = list(max.delta = 10),
-  labels = c(1:15),
-  pie = rep(1, 15),
-  title="b) Replication",
-  title.cex=3,
-  vsize = 14,
-  pieBorder = 0.3,
-  pieColor = recode(
+  labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10),
+  legend=F,
+  GLratio = 1.1,
+  groups =  recode(
     wtc$membership,
-    `2` = "#FFD670",
-    `1` = "#FF9770",
-    `3` = "#D3D3D3",
-    
+    `2` = "Childhood Trauma",
+    `1` = "Perceived Helplessness",
+    `3` = "Perceived Self-Efficacy"
   ),
-  groups = c(rep("1) Childhood Trauma", 5), rep("2) Perceived Stress", 10)),
-  label.cex = 2,
-  color = c(rep("#D3D3D3", 5),
-            rep("#5DBCD2", 10)),
-  nodeNames = colnames(graph_data),
-  legend=FALSE,
-  maximum = 0.4843399,
-  minimum = 0
-  
-
+  layoutOffset = c(-0.05, 0),
+  layoutScale = c(1, 1.05),
+  label.cex = 0.99,
+  color =  c("grey",
+             "#EBCC2A",
+             "#78B7C5"
+  ),
+  label.prop = 0.96,
+  vsize=13,
+  DoNotPlot=F,
+  nodeNames = colnames(graph_original$graph),
+  minimum = 0,
+  maximum = 0.483,
+  title="b) Replication",
+  title.cex=3
 )
 
 qgraph(
   graph_combined$graph,
-  layout = graph_original_plot$layout,
+  layout = layout_network,
   theme = "Borkulo",
-  labels = TRUE,
-  layout.par = list(max.delta = 10),
-  labels = c(1:15),
-  title="c) Combined",
-  title.cex=3,
-  vsize = 14,
-  pie = rep(1, 15),
-  pieBorder = 0.3,
-  pieColor = recode(
+  labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10),
+  legend=F,
+  GLratio = 1.1,
+  groups =  recode(
     wtc$membership,
-    `2` = "#FFD670",
-    `1` = "#FF9770",
-    `3` = "#D3D3D3",
-    
+    `2` = "Childhood Trauma",
+    `1` = "Perceived Helplessness",
+    `3` = "Perceived Self-Efficacy"
   ),
-  groups = c(rep("1) Childhood Trauma", 5), rep("2) Perceived Stress", 10)),
-  label.cex = 2,
-  color = c(rep("#D3D3D3", 5),
-            rep("#5DBCD2", 10)),
-  nodeNames = colnames(graph_data),
-  legend=FALSE,
-  maximum = 0.4843399,
-  minimum = 0
-  
+  layoutOffset = c(-0.05, 0),
+  layoutScale = c(1, 1.05),
+  label.cex = 0.99,
+  color =  c("grey",
+             "#EBCC2A",
+             "#78B7C5"
+  ),
+  label.prop = 0.96,
+  vsize=14,
+  DoNotPlot=F,
+  nodeNames = colnames(graph_original$graph),
+  minimum = 0,
+  maximum = 0.483,
+  title="c) Combined",
+  title.cex=3
   
 )
+
 dev.off()
