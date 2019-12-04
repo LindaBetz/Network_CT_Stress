@@ -1,4 +1,3 @@
-
 # ---------------------------- 1: Load libraries & packages -----------------------------
 library(qgraph)
 library(igraph)
@@ -9,15 +8,13 @@ library(dplyr)
 
 # all data sets are available at https://www.icpsr.umich.edu/icpsrweb/
 
-# original sample
+# original sample (= Biomarker original)
 biomarker_data_original <- da29282.0001 # CTQ, PSS in here
-demographic_data_original <-
-  da04652.0001 # demographic & clinical vars in here
+demographic_data_original <- da04652.0001 # demographic & clinical vars in here
 
-# refresher sample
-biomarker_data_refresher <- da36901.0001 # CTQ, PSS in here
-demographic_data_refresher <-
-  da36532.0001 # demographic & clinical vars in here
+# replication sample (= Biomarker refresher)
+biomarker_data_replication <- da36901.0001 # CTQ, PSS in here
+demographic_data_replication <- da36532.0001 # demographic & clinical vars in here
 
 # ---------------------------- 2: Data wrangling & sample characteristics -----------------------------
 
@@ -72,8 +69,8 @@ desc_data_original <- biomarker_data_original %>%
   left_join(demographic_data_original, by = "M2ID") %>%
   filter(M2ID %in% relevant_IDs_original$M2ID) %>%
   transmute(
-    Age = B1PAGE_M2.y,
-    Sex = ifelse(B1PRSEX.y == "(1) MALE", 1, 0),
+    Age = B1PAGE_M2.x,
+    Sex = ifelse(B1PRSEX.x == "(1) MALE", 1, 0),
     Site =  B4ZSITE,
     MIDUS_Sample = SAMPLMAJ.x,
     CESD = B4QCESD,
@@ -171,7 +168,7 @@ graph_original <- estimateNetwork(
 )
 
 # estimate communities via walktrap
-g <- as.igraph(qgraph(graph_original$graph), attributes = TRUE)
+g <- as.igraph(qgraph(graph_original$graph, DoNotPlot=TRUE), attributes = TRUE)
 wtc <- walktrap.community(g)
 
 # layout for network
@@ -291,7 +288,7 @@ plot(
 
 # ---------------------------- 5: Replication Analyses -----------------------------
 # filter those people with no missing values
-relevant_IDs_refresher <- biomarker_data_refresher %>%
+relevant_IDs_replication <- biomarker_data_replication %>%
   select(.,
          matches(
            "MRID|RA4QCT_EA|RA4QCT_SA|RA4QCT_PA|RA4QCT_EN|RA4QCT_PN|RA4Q4"
@@ -300,15 +297,15 @@ relevant_IDs_refresher <- biomarker_data_refresher %>%
   filter(na_per_row <= 13 / 15) %>%
   transmute(MRID)
 
-nrow(relevant_IDs_refresher) # 862 ==> one person does not have at least two variables, we thus exclude
+nrow(relevant_IDs_replication) # 862 ==> one person does not have at least two variables, we thus exclude
 
 # create data set to calculate sample statstiscs
-desc_data_refresher <- biomarker_data_refresher %>%
-  left_join(demographic_data_refresher, by = "MRID") %>%
-  filter(MRID %in% relevant_IDs_refresher$MRID) %>%
+desc_data_replication <- biomarker_data_replication %>%
+  left_join(demographic_data_replication, by = "MRID") %>%
+  filter(MRID %in% relevant_IDs_replication$MRID) %>%
   transmute(
-    Age = RA1PRAGE.y,
-    Sex = ifelse(RA1PRSEX.y == "(1) MALE", 1, 0),
+    Age = RA1PRAGE.x,
+    Sex = ifelse(RA1PRSEX.x == "(1) MALE", 1, 0),
     Site =  RA4ZSITE,
     MIDUS_Sample = SAMPLMAJ.y,
     CESD = RA4QCESD,
@@ -338,17 +335,17 @@ desc_data_refresher <- biomarker_data_refresher %>%
         ifelse(as.numeric(RA1PB1) > 8, "4-year college degree or more", NA)
       )
     )
-  ) %>% mutate(Sample = "Refresher")
+  ) %>% mutate(Sample = "Replication")
 
 
 # frequency/count data
-desc_data_refresher %>%
+desc_data_replication %>%
   select(., c(Ethnicity, Education)) %>%
   map(~ table(.) / sum(!is.na(.))) %>%
   map(~ round(., 3))
 
 # continous data
-desc_data_refresher %>%
+desc_data_replication %>%
   select(
     .,
     c(
@@ -369,7 +366,7 @@ desc_data_refresher %>%
 # statistical comparison of samples
 
 combined_data <-
-  rbind.data.frame(desc_data_original, desc_data_refresher)
+  rbind.data.frame(desc_data_original, desc_data_replication)
 
 combined_data %>%
   select(., c(Sex, Ethnicity, Education)) %>%
@@ -403,10 +400,8 @@ combined_data %>%
     )
   )
 
-
-
 # extract relevant variables from data set, basic "preprocessing" as above
-graph_data_refresher <- biomarker_data_refresher %>%
+graph_data_replication <- biomarker_data_replication %>%
   # filter(SAMPLMAJ == "(01) MAIN RDD") %>%
   select(.,
          matches("RA4QCT_EA|RA4QCT_SA|RA4QCT_PA|RA4QCT_EN|RA4QCT_PN|RA4Q4")) %>%
@@ -433,9 +428,9 @@ graph_data_refresher <- biomarker_data_refresher %>%
     everything()
   )
 
-# estimate refresher network
-graph_refresher <- estimateNetwork(
-  graph_data_refresher,
+# estimate replication network
+graph_replication <- estimateNetwork(
+  graph_data_replication,
   default = "ggmModSelect",
   tuning = 0,
   stepwise = TRUE,
@@ -445,7 +440,7 @@ graph_refresher <- estimateNetwork(
 )
 
 # basic comparison: correlate the two partial correlation matrices
-cor(c(graph_original$graph), c(graph_refresher$graph)) # 0.9242128
+cor(c(graph_original$graph), c(graph_replication$graph)) # 0.9242128
 
 # Network Comparison for Differences in Structure, Global Strength & Individual Edges
 set.seed(1337)
@@ -453,7 +448,7 @@ set.seed(1337)
 compare_12 <-
   NCT(
     graph_original,
-    graph_refresher,
+    graph_replication,
     it = 1000,
     test.edges = TRUE,
     edges = 'all',
@@ -475,19 +470,19 @@ graph_original_strength <-
   centralityTable(graph_original$graph) %>% filter(measure == "Strength") %>%
   transmute(value)
 
-graph_refresher_strength <-
-  centralityTable(graph_refresher$graph) %>% filter(measure == "Strength") %>%
+graph_replication_strength <-
+  centralityTable(graph_replication$graph) %>% filter(measure == "Strength") %>%
   transmute(value)
 
-cor(graph_original_strength, graph_refresher_strength) # 0.9562717
+cor(graph_original_strength, graph_replication_strength) # 0.9562717
 
-# plot refresher network & combined network
+# plot replication network & combined network
 # estimate communities via walktrap
-walktrap.community(as.igraph(qgraph(graph_refresher$graph), attributes = TRUE))$membership
+walktrap.community(as.igraph(qgraph(graph_replication$graph), attributes = TRUE))$membership
 
 # estimate combined network
 graph_combined <- estimateNetwork(
-  rbind.data.frame(graph_data_original, graph_data_refresher),
+  rbind.data.frame(graph_data_original, graph_data_replication),
   default = "ggmModSelect",
   tuning = 0,
   stepwise = TRUE,
@@ -535,7 +530,7 @@ qgraph(
 )
 
 qgraph(
-  graph_refresher$graph,
+  graph_replication$graph,
   layout = layout_network,
   theme = "Borkulo",
   labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10),
