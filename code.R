@@ -1,14 +1,16 @@
+
 # ---------------------------- 1: Load libraries & packages -----------------------------
 library(qgraph)
 library(igraph)
 library(bootnet)
+library(NetworkComparisonTest)
 library(coin)
 library(purrr)
 library(dplyr)
 
 # all data sets are available at https://www.icpsr.umich.edu/icpsrweb/
 
-# original sample (= Biomarker original)
+# original sample (= Biomarker "original")
 biomarker_data_original <- da29282.0001 # CTQ, PSS in here
 demographic_data_original <- da04652.0001 # demographic & clinical vars in here
 
@@ -51,6 +53,8 @@ recode_vars <- c(
   "Did not feel on top of things"
   # pos
 )
+
+# ----------------------------------- ORIGINAL SAMPLE 
 
 # filter those people with no missing values
 relevant_IDs_original <- biomarker_data_original %>%
@@ -131,7 +135,7 @@ desc_data_original %>%
 graph_data_original <- biomarker_data_original %>%
   # filter(SAMPLMAJ == "(01) MAIN RDD") %>%
   select(.,
-         matches("B4QCT_EA|B4QCT_SA|B4QCT_PA|B4QCT_EN|B4QCT_PN|B4Q4")) %>%
+         matches("B1PRSEX|B4QCT_EA|B4QCT_SA|B4QCT_PA|B4QCT_EN|B4QCT_PN|B4Q4")) %>%
   `colnames<-`(var_names) %>%
   mutate_all(as.numeric) %>%
   mutate_at(recode_vars,
@@ -152,8 +156,222 @@ graph_data_original <- biomarker_data_original %>%
     `Emotional Abuse`,
     `Physical Abuse`,
     `Sexual Abuse`,
+    Sex = ifelse(B1PRSEX == "(1) MALE", 1, 0),
     everything()
   )
+
+# ------------------------------------ REPLICATION SAMPLE
+
+# filter those people with no missing values
+relevant_IDs_replication <- biomarker_data_replication %>%
+  select(.,
+         matches(
+           "MRID|RA4QCT_EA|RA4QCT_SA|RA4QCT_PA|RA4QCT_EN|RA4QCT_PN|RA4Q4"
+         )) %>%
+  mutate(na_per_row = rowSums(is.na(.) / 15)) %>% #MRID never missing
+  filter(na_per_row <= 13 / 15) %>%
+  transmute(MRID)
+
+nrow(relevant_IDs_replication) # 862 ==> one person does not have at least two variables, we thus exclude
+
+
+# create data set to calculate sample statstiscs
+desc_data_replication <- biomarker_data_replication %>%
+  left_join(demographic_data_replication, by = "MRID") %>%
+  filter(MRID %in% relevant_IDs_replication$MRID) %>%
+  transmute(
+    Age = RA1PRAGE.x,
+    Sex = ifelse(RA1PRSEX.x == "(1) MALE", 1, 0),
+    Site =  RA4ZSITE,
+    MIDUS_Sample = SAMPLMAJ.y,
+    CESD = RA4QCESD,
+    PSS = RA4QPS_PS,
+    Emotional_Abuse = RA4QCT_EA,
+    Sexual_Abuse = RA4QCT_SA,
+    Physical_Abuse = RA4QCT_PA,
+    Emotional_Neglect = RA4QCT_EN,
+    Phyiscal_Neglect = RA4QCT_PN,
+    
+    Ethnicity = ifelse(
+      RA1PF7A == "(1) WHITE",
+      "White",
+      ifelse(
+        RA1PF7A == "(2) BLACK AND/OR AFRICAN AMERICAN",
+        "African-American",
+        "Other"
+      )
+    ),
+    Education = ifelse(
+      as.numeric(RA1PB1) <= 3,
+      "less than high school",
+      ifelse(
+        as.numeric(RA1PB1) > 3 &
+          as.numeric(RA1PB1) <= 8,
+        "graduated at least high school or obtained GED",
+        ifelse(as.numeric(RA1PB1) > 8, "4-year college degree or more", NA)
+      )
+    )
+  ) %>% mutate(Sample = "Replication")
+
+
+# frequency/count data
+desc_data_replication %>%
+  select(., c(Ethnicity, Education)) %>%
+  map(~ table(.) / sum(!is.na(.))) %>%
+  map(~ round(., 3))
+
+# continous data
+desc_data_replication %>%
+  select(
+    .,
+    c(
+      Age,
+      Sex,
+      CESD,
+      PSS,
+      Emotional_Abuse,
+      Sexual_Abuse,
+      Physical_Abuse,
+      Emotional_Neglect,
+      Phyiscal_Neglect
+    )
+  ) %>%
+  summarise_all(c("mean", "sd"), na.rm = TRUE) %>%
+  round(., 1)
+
+# ----------------- Statistical Comparison
+combined_data <-
+  rbind.data.frame(desc_data_original, desc_data_replication)
+
+combined_data %>%
+  select(., c(Sex, Ethnicity, Education)) %>%
+  map(
+    ~ chisq_test(
+      as.factor(.) ~ as.factor(combined_data$Sample),
+      data = combined_data,
+      distribution = "approximate"
+    )
+  )
+
+combined_data %>%
+  select(
+    .,
+    c(
+      Age,
+      CESD,
+      PSS,
+      Emotional_Abuse,
+      Sexual_Abuse,
+      Physical_Abuse,
+      Emotional_Neglect,
+      Phyiscal_Neglect
+    )
+  ) %>%
+  map(
+    ~ oneway_test(
+      as.numeric(.) ~ as.factor(combined_data$Sample),
+      data = combined_data,
+      distribution = "approximate"
+    )
+  )
+
+# ------------------------------------ COMBINED SAMPLE
+# descriptives for combined sample
+
+desc_combined_data <-
+  rbind.data.frame(desc_data_original, desc_data_replication)
+
+# frequency/count data
+desc_combined_data %>%
+  select(., c(Ethnicity, Education)) %>%
+  map(~ table(.) / sum(!is.na(.))) %>%
+  map(~ round(., 3))
+
+# continous data
+desc_combined_data %>%
+  select(
+    .,
+    c(
+      Age,
+      Sex,
+      CESD,
+      PSS,
+      Emotional_Abuse,
+      Sexual_Abuse,
+      Physical_Abuse,
+      Emotional_Neglect,
+      Phyiscal_Neglect
+    )
+  ) %>%
+  summarise_all(c("mean", "sd"), na.rm = TRUE) %>%
+  round(., 1)
+
+# ------------------------------------ MALES vs. FEMALES
+# ----------------- Descriptives
+
+# 0 = women, 1 = men
+# frequency/count data
+desc_combined_data %>%
+  select(., c(Sex, Ethnicity, Education)) %>%
+  split(.$Sex) %>% 
+  map(~select(., -c("Sex"))) %>% # remove sex variable after grouping
+  map(~ c(table(.$Ethnicity) / sum(!is.na(.$Ethnicity)),
+         table(.$Education) / sum(!is.na(.$Education)))) %>%
+  map(~ round(., 3))
+
+# continous data
+desc_combined_data  %>%
+  select(
+    .,
+    c(
+      Age,
+      Sex,
+      CESD,
+      PSS,
+      Emotional_Abuse,
+      Sexual_Abuse,
+      Physical_Abuse,
+      Emotional_Neglect,
+      Phyiscal_Neglect
+    )
+  ) %>%  group_by(Sex) %>% # males
+  summarise_all(c("mean", "sd"), na.rm = TRUE) %>%
+  round(., 1)
+
+# ----------------- Statistical Comparison
+set.seed(1)
+desc_combined_data %>%
+  select(., c(Ethnicity, Education)) %>%
+  map(
+    ~ chisq_test(
+      as.factor(.) ~ as.factor(desc_combined_data$Sex),
+      data = combined_data,
+      distribution = "approximate"
+    )
+  )
+
+desc_combined_data %>%
+  select(
+    .,
+    c(
+      Age,
+      CESD,
+      PSS,
+      Emotional_Abuse,
+      Sexual_Abuse,
+      Physical_Abuse,
+      Emotional_Neglect,
+      Phyiscal_Neglect
+    )
+  ) %>%
+  map(
+    ~ oneway_test(
+      as.numeric(.) ~ as.factor(desc_combined_data$Sex),
+      data = combined_data,
+      distribution = "approximate"
+    )
+  )
+
 # ---------------------------- 3: Network estimation & visualization -----------------------------
 
 # estimate network
@@ -286,119 +504,167 @@ plot(
 ) + theme(text = element_text(size = 13))
 #dev.off()
 
-# ---------------------------- 5: Replication Analyses -----------------------------
-# filter those people with no missing values
-relevant_IDs_replication <- biomarker_data_replication %>%
+# ---------------------------- 5: Comparison Sex Differences -----------------------------
+
+# here, we first merge the original and replication sample to retain sufficient power
+graph_data_sex <- biomarker_data_original %>%
+  filter(M2ID %in% relevant_IDs_original$M2ID) %>%
   select(.,
-         matches(
-           "MRID|RA4QCT_EA|RA4QCT_SA|RA4QCT_PA|RA4QCT_EN|RA4QCT_PN|RA4Q4"
-         )) %>%
-  mutate(na_per_row = rowSums(is.na(.) / 15)) %>% #MRID never missing
-  filter(na_per_row <= 13 / 15) %>%
-  transmute(MRID)
+         matches("B1PRSEX|B4QCT_EA|B4QCT_SA|B4QCT_PA|B4QCT_EN|B4QCT_PN|B4Q4")) %>%
+  `colnames<-`(c("Sex", var_names)) %>%
+  mutate_all(as.numeric) %>%
+  mutate_at(recode_vars,
+            ~ recode(
+              # recode positive items
+              .,
+              `1` = 5,
+              `2` = 4,
+              `3` = 3,
+              `4` = 2,
+              `5` = 1,
+              .missing = NA_real_
+            )) %>%
+  select(Sex, # 1 = male, 2 = female
+    # change order of items, to make plot nicer later
+    `Emotional Neglect`,
+    `Physical Neglect`,
+    `Emotional Abuse`,
+    `Physical Abuse`,
+    `Sexual Abuse`,
+    everything()
+  ) %>%
+  bind_rows(biomarker_data_replication %>% # here we bind the replication sample to the original sample
+              filter(MRID %in% relevant_IDs_replication$MRID) %>%
+              select(.,
+                     matches("RA1PRSEX|RA4QCT_EA|RA4QCT_SA|RA4QCT_PA|RA4QCT_EN|RA4QCT_PN|RA4Q4")) %>%
+              `colnames<-`(c("Sex", var_names)) %>%
+              mutate_all(as.numeric) %>%
+              mutate_at(recode_vars,
+                        ~ recode(
+                          # recode positive items
+                          .,
+                          `1` = 5,
+                          `2` = 4,
+                          `3` = 3,
+                          `4` = 2,
+                          `5` = 1,
+                          .missing = NA_real_
+                        )) %>%
+              select(Sex, # 1 = male, 2 = female
+                     # change order of items, to make plot nicer later
+                     `Emotional Neglect`,
+                     `Physical Neglect`,
+                     `Emotional Abuse`,
+                     `Physical Abuse`,
+                     `Sexual Abuse`,
+                     everything()
+              )) %>%  split(.$Sex) %>% 
+ map(~select(., -c("Sex"))) # remove sex variable after grouping
 
-nrow(relevant_IDs_replication) # 862 ==> one person does not have at least two variables, we thus exclude
 
-# create data set to calculate sample statstiscs
-desc_data_replication <- biomarker_data_replication %>%
-  left_join(demographic_data_replication, by = "MRID") %>%
-  filter(MRID %in% relevant_IDs_replication$MRID) %>%
-  transmute(
-    Age = RA1PRAGE.x,
-    Sex = ifelse(RA1PRSEX.x == "(1) MALE", 1, 0),
-    Site =  RA4ZSITE,
-    MIDUS_Sample = SAMPLMAJ.y,
-    CESD = RA4QCESD,
-    PSS = RA4QPS_PS,
-    Emotional_Abuse = RA4QCT_EA,
-    Sexual_Abuse = RA4QCT_SA,
-    Physical_Abuse = RA4QCT_PA,
-    Emotional_Neglect = RA4QCT_EN,
-    Phyiscal_Neglect = RA4QCT_PN,
-    
-    Ethnicity = ifelse(
-      RA1PF7A == "(1) WHITE",
-      "White",
-      ifelse(
-        RA1PF7A == "(2) BLACK AND/OR AFRICAN AMERICAN",
-        "African-American",
-        "Other"
-      )
+# ----------------- estimate male network
+graph_male <- estimateNetwork(
+  graph_data_sex$`1`,
+  default = "ggmModSelect",
+  tuning = 0,
+  stepwise = TRUE,
+  missing = "pairwise",
+  corArgs = list(method = "spearman"),
+  corMethod = "cor"
+)
+
+# ----------------- estimate female network
+graph_female <- estimateNetwork(
+  graph_data_sex$`2`,
+  default = "ggmModSelect",
+  tuning = 0,
+  stepwise = TRUE,
+  missing = "pairwise",
+  corArgs = list(method = "spearman"),
+  corMethod = "cor"
+)
+
+# ----------------- run network comparison 
+set.seed(1994)
+compare_male_female <-
+  NCT(
+    graph_male,
+    graph_female,
+    it = 1000,
+    test.edges = TRUE,
+    edges = 'all',
+    progressbar = TRUE
+  )
+
+p.adjust(compare_male_female$einv.pvals$`p-value`, method = "BH")
+  
+# ------------- Plotting networks
+png(width=1250, height=450, "male_female_plot.png")
+layout(matrix(c(1, 2), 1, 2, byrow = TRUE), widths = c(2.5, 4))
+qgraph(
+  graph_male$graph,
+  title.cex = 1.75,
+  edge.width=1,
+  layout = layout_network,
+  theme = "Borkulo",
+  labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10),
+  legend=F,
+  groups =  recode(
+    wtc$membership,
+    `2` = "Childhood Trauma",
+    `1` = "Perceived Helplessness",
+    `3` = "Perceived Self-Efficacy"
+  ),
+  legend.mode="style1",
+  color =  c("grey",
+             "#EBCC2A",
+             "#78B7C5"
+  ),
+  label.cex = 1.45, 
+  DoNotPlot=F,
+  legend.cex = 0.69,
+  vsize = 8,
+  title = "Men",
+  minimum = 0,
+  maximum = 0.4814082
+  
+)
+
+qgraph(
+  graph_female$graph,
+  layout = layout_network,
+  edge.width=0.75,
+  theme = "Borkulo",
+  labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10),
+  legend=T,
+  GLratio = 2.25,
+  groups =  recode(
+    wtc$membership,
+    `2` = "Childhood Trauma",
+    `1` = "Perceived Helplessness",
+    `3` = "Perceived Self-Efficacy"),
+  layoutOffset = c(-0.305, 0),
+  layoutScale = c(0.89, 1),
+    legend.mode="style1",
+    color =  c("grey",
+               "#EBCC2A",
+               "#78B7C5"
     ),
-    Education = ifelse(
-      as.numeric(RA1PB1) <= 3,
-      "less than high school",
-      ifelse(
-        as.numeric(RA1PB1) > 3 &
-          as.numeric(RA1PB1) <= 8,
-        "graduated at least high school or obtained GED",
-        ifelse(as.numeric(RA1PB1) > 8, "4-year college degree or more", NA)
-      )
-    )
-  ) %>% mutate(Sample = "Replication")
-
-
-# frequency/count data
-desc_data_replication %>%
-  select(., c(Ethnicity, Education)) %>%
-  map(~ table(.) / sum(!is.na(.))) %>%
-  map(~ round(., 3))
-
-# continous data
-desc_data_replication %>%
-  select(
-    .,
-    c(
-      Age,
-      Sex,
-      CESD,
-      PSS,
-      Emotional_Abuse,
-      Sexual_Abuse,
-      Physical_Abuse,
-      Emotional_Neglect,
-      Phyiscal_Neglect
-    )
-  ) %>%
-  summarise_all(c("mean", "sd"), na.rm = TRUE) %>%
-  round(., 1)
-
-# statistical comparison of samples
-
-combined_data <-
-  rbind.data.frame(desc_data_original, desc_data_replication)
-
-combined_data %>%
-  select(., c(Sex, Ethnicity, Education)) %>%
-  map(
-    ~ chisq_test(
-      as.factor(.) ~ as.factor(combined_data$Sample),
-      data = combined_data,
-      distribution = "approximate"
-    )
+  label.cex = 1.375,
+  vsize = 6.25,
+  DoNotPlot=F,
+    nodeNames = colnames(graph_original$graph),
+  legend.cex = 0.65,
+  title = "Women",
+  minimum = 0,
+  title.cex = 1.75,
+  maximum = 0.4814082
   )
 
-combined_data %>%
-  select(
-    .,
-    c(
-      Age,
-      CESD,
-      PSS,
-      Emotional_Abuse,
-      Sexual_Abuse,
-      Physical_Abuse,
-      Emotional_Neglect,
-      Phyiscal_Neglect
-    )
-  ) %>%
-  map(
-    ~ oneway_test(
-      as.numeric(.) ~ as.factor(combined_data$Sample),
-      data = combined_data,
-      distribution = "approximate"
-    )
-  )
+dev.off()
+
+
+# ---------------------------- 5: Replication Analyses -----------------------------
 
 # extract relevant variables from data set, basic "preprocessing" as above
 graph_data_replication <- biomarker_data_replication %>%
