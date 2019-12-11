@@ -312,7 +312,7 @@ desc_combined_data %>%
     )
   )
 
-## .......................... MALES & FEMALES ..........................
+## .......................... Subgroups: Males & Female ..........................
 ### _____________ descriptives for males and females _____________
 # 0 = women, 1 = men 
 #### frequency/count data
@@ -345,7 +345,7 @@ desc_combined_data  %>%
   summarise_all(c("mean", "sd"), na.rm = TRUE) %>%
   round(., 1)
 
-### _____________ Statistical Comparison (male vs. female sample) _____________
+### _____________ statistical comparison (male vs. female sample) _____________
 #### frequency data
 set.seed(1)
 desc_combined_data %>%
@@ -792,7 +792,7 @@ graph_combined <- estimateNetwork(
 walktrap.community(as.igraph(qgraph(graph_combined$graph), attributes = TRUE))$membership
 
 # ==> communities are the same across all three graphs. That's why we use the original object for grouping in the plots
-### _____________ plot combined, original and replication network next to each other 
+### _____________ supplementary plot: combined, original and replication network next to each other 
 #png(width = 1200, height = 450, "combined_plot.png")
 par(mfrow = c(1, 3))
 qgraph(
