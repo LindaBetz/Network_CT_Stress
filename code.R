@@ -64,7 +64,7 @@ recode_vars <- c(
   # pos
 )
 
-## .................... ORIGINAL SAMPLE  ....................
+## .......................... Original Sample  ..........................
 
 ### filter those people with no missing values
 relevant_IDs_original <- biomarker_data_original %>%
@@ -120,7 +120,7 @@ desc_data_original %>%
   map( ~ table(.) / sum(!is.na(.))) %>%
   map( ~ round(., 3))
 
-### continous data
+### interval data
 desc_data_original %>%
   select(
     .,
@@ -169,7 +169,7 @@ graph_data_original <- biomarker_data_original %>%
     everything()
   )
 
-## ....................  REPLICATION SAMPLE  ....................
+## ..........................  Replication Sample  ..........................
 
 ### filter those people with no missing values
 relevant_IDs_replication <- biomarker_data_replication %>%
@@ -198,7 +198,6 @@ desc_data_replication <- biomarker_data_replication %>%
     Physical_Abuse = RA4QCT_PA,
     Emotional_Neglect = RA4QCT_EN,
     Phyiscal_Neglect = RA4QCT_PN,
-    
     Ethnicity = ifelse(
       RA1PF7A == "(1) WHITE",
       "White",
@@ -227,7 +226,7 @@ desc_data_replication %>%
   map( ~ table(.) / sum(!is.na(.))) %>%
   map( ~ round(., 3))
 
-### continous data
+### interval data
 desc_data_replication %>%
   select(
     .,
@@ -246,11 +245,41 @@ desc_data_replication %>%
   summarise_all(c("mean", "sd"), na.rm = TRUE) %>%
   round(., 1)
 
-## ....................  Statistical Comparison (original vs. replication sample)  ....................
-combined_data <-
+
+## .......................... Combined Sample (original + replication) ..........................
+### _____________ descriptives for combined sample _____________ 
+# combine both samples into one df
+desc_combined_data <-
   rbind.data.frame(desc_data_original, desc_data_replication)
 
-combined_data %>%
+#### frequency/count data
+desc_combined_data %>%
+  select(., c(Ethnicity, Education)) %>%
+  map( ~ table(.) / sum(!is.na(.))) %>%
+  map( ~ round(., 3))
+
+#### continous data
+desc_combined_data %>%
+  select(
+    .,
+    c(
+      Age,
+      Sex,
+      CESD,
+      PSS,
+      Emotional_Abuse,
+      Sexual_Abuse,
+      Physical_Abuse,
+      Emotional_Neglect,
+      Phyiscal_Neglect
+    )
+  ) %>%
+  summarise_all(c("mean", "sd"), na.rm = TRUE) %>%
+  round(., 1)
+
+### _____________  Statistical Comparison (original vs. replication sample) _____________
+#### frequency data
+desc_combined_data %>%
   select(., c(Sex, Ethnicity, Education)) %>%
   map(
     ~ chisq_test(
@@ -260,7 +289,8 @@ combined_data %>%
     )
   )
 
-combined_data %>%
+#### interval data
+desc_combined_data %>%
   select(
     .,
     c(
@@ -282,41 +312,10 @@ combined_data %>%
     )
   )
 
-## .................... COMBINED SAMPLE ....................
-### descriptives for combined sample
-
-desc_combined_data <-
-  rbind.data.frame(desc_data_original, desc_data_replication)
-
-### frequency/count data
-desc_combined_data %>%
-  select(., c(Ethnicity, Education)) %>%
-  map( ~ table(.) / sum(!is.na(.))) %>%
-  map( ~ round(., 3))
-
-### continous data
-desc_combined_data %>%
-  select(
-    .,
-    c(
-      Age,
-      Sex,
-      CESD,
-      PSS,
-      Emotional_Abuse,
-      Sexual_Abuse,
-      Physical_Abuse,
-      Emotional_Neglect,
-      Phyiscal_Neglect
-    )
-  ) %>%
-  summarise_all(c("mean", "sd"), na.rm = TRUE) %>%
-  round(., 1)
-
-## .................... MALES vs. FEMALES ....................
-## Descriptives ~ 0 = women, 1 = men
-
-### frequency/count data
+## .......................... MALES & FEMALES ..........................
+### _____________ descriptives for males and females _____________
+# 0 = women, 1 = men 
+#### frequency/count data
 desc_combined_data %>%
   select(., c(Sex, Ethnicity, Education)) %>%
   split(.$Sex) %>%
@@ -327,7 +326,7 @@ desc_combined_data %>%
   )) %>%
   map( ~ round(., 3))
 
-### continous data
+#### continous data
 desc_combined_data  %>%
   select(
     .,
@@ -346,8 +345,8 @@ desc_combined_data  %>%
   summarise_all(c("mean", "sd"), na.rm = TRUE) %>%
   round(., 1)
 
-## .................... Statistical Comparison (male vs. female sample) ...................
-### frequency data
+### _____________ Statistical Comparison (male vs. female sample) _____________
+#### frequency data
 set.seed(1)
 desc_combined_data %>%
   select(., c(Ethnicity, Education)) %>%
@@ -359,7 +358,7 @@ desc_combined_data %>%
     )
   )
 
-### interval data
+#### interval data
 desc_combined_data %>%
   select(
     .,
@@ -383,7 +382,7 @@ desc_combined_data %>%
   )
 
 # ---------------------------- 3: Network estimation & visualization -----------------------------
-## .................... estimate network ....................
+## .......................... estimate network ..........................
 graph_original <- estimateNetwork(
   graph_data_original,
   default = "ggmModSelect",
@@ -394,12 +393,12 @@ graph_original <- estimateNetwork(
   corMethod = "cor"
 )
 
-## ................... estimate communities via walktrap ...................
+## ........................... estimate communities via walktrap ..........................
 g <-
   as.igraph(qgraph(graph_original$graph, DoNotPlot = TRUE), attributes = TRUE)
 wtc <- walktrap.community(g)
 
-## ................... layout for network ...................
+## .......................... layout for network ..........................
 layout_network <- as.matrix(data.frame(
   x =  c(
     0.702164557,
@@ -437,7 +436,7 @@ layout_network <- as.matrix(data.frame(
   )
 ))
 
-## .................. plot network  ..................
+## .......................... plot network  ..........................
 graph_original_plot <- qgraph(
   graph_original$graph,
   layout = layout_network,
@@ -468,7 +467,7 @@ graph_original_plot <- qgraph(
 
 
 # ---------------------------- 4: Sensitvity Analyses -----------------------------
-## .................. case-drop bootstrapping ..................
+## .......................... case-drop bootstrapping ..........................
 results_case <-
   bootnet(graph_original, type = "case", nBoots = 1000)
 corStability(results_case) # 0.75 for edge & strength
@@ -498,7 +497,7 @@ plot(results_case, statistics = c("edge")) +
 #dev.off()
 
 
-## .................. regular bootstrapping for edge weights  ..................
+## .......................... regular bootstrapping for edge weights  ..........................
 results_boot <- bootnet(graph_original, nBoots = 1000)
 
 ### supplementary plot: bootstrapped edges
@@ -514,7 +513,7 @@ plot(
 #dev.off()
 
 # ---------------------------- 5: Comparison Sex Differences -----------------------------
-## .................. data set preparation ..................
+## ........................... data set preparation ..........................
 
 # here, we first merge the original and replication sample to retain sufficient power
 graph_data_sex <- biomarker_data_original %>%
@@ -586,7 +585,7 @@ graph_data_sex <- biomarker_data_original %>%
   map( ~ select(.,-c("Sex"))) # remove sex variable after grouping
 
 
-## .................. estimate male network ..................
+## .......................... estimate male network ..........................
 graph_male <- estimateNetwork(
   graph_data_sex$`1`,
   default = "ggmModSelect",
@@ -597,7 +596,7 @@ graph_male <- estimateNetwork(
   corMethod = "cor"
 )
 
-## .................. estimate female network ..................
+## ........................... estimate female network ..........................
 graph_female <- estimateNetwork(
   graph_data_sex$`2`,
   default = "ggmModSelect",
@@ -608,7 +607,7 @@ graph_female <- estimateNetwork(
   corMethod = "cor"
 )
 
-## .................. network comparison (male & female network) ..................
+## ........................... network comparison (male & female network) ...........................
 set.seed(1994)
 compare_male_female <-
   NCT(
@@ -695,7 +694,7 @@ qgraph(
 
 
 # ---------------------------- 5: Replication Analyses -----------------------------
-## .................. data set preparation ..................
+## ........................... data set preparation ...........................
 # extract relevant variables from data set, basic "preprocessing" as above
 graph_data_replication <- biomarker_data_replication %>%
   select(.,
@@ -723,7 +722,7 @@ graph_data_replication <- biomarker_data_replication %>%
     everything()
   )
 
-## .................. estimate replication network ..................
+## ........................... estimate replication network ...........................
 graph_replication <- estimateNetwork(
   graph_data_replication,
   default = "ggmModSelect",
@@ -734,11 +733,23 @@ graph_replication <- estimateNetwork(
   corMethod = "cor"
 )
 
-## .................. network comparison (original & replication network) ..................
-### basic comparison: correlate the two partial correlation matrices
+## ........................... network comparison (original & replication network) ..........................
+### _____________  basic comparison: correlate the two partial correlation matrices _____________
 cor(c(graph_original$graph), c(graph_replication$graph)) # 0.9242128
 
-### Network Comparison for Differences in Structure, Global Strength & Individual Edges
+### _____________ basic comparison: correlate strength centrality indices _____________
+
+graph_original_strength <-
+  centralityTable(graph_original$graph) %>% filter(measure == "Strength") %>%
+  transmute(value)
+
+graph_replication_strength <-
+  centralityTable(graph_replication$graph) %>% filter(measure == "Strength") %>%
+  transmute(value)
+
+cor(graph_original_strength, graph_replication_strength) # 0.9562717
+
+### _____________ NCT for differences in structure, global strength & individual edges  _____________
 set.seed(1337)
 compare_12 <-
   NCT(
@@ -750,32 +761,23 @@ compare_12 <-
     progressbar = TRUE
   )
 
-### NCT Structure differences
+#### NCT structure differences
 compare_12$nwinv.pval #  0.783
 
-### NCT quantification of differences: count significantly different edges (total number of edges 105)
-sum(compare_12$einv.pvals$"p-value" < 0.05) # 0
-sum(p.adjust(compare_12$einv.pvals$"p-value", "BH") < 0.05) # 0
-
-### NCT global strength
+#### NCT global strength
 compare_12$glstrinv.pval # 0.496
 
-### correlate strength centrality indices
-graph_original_strength <-
-  centralityTable(graph_original$graph) %>% filter(measure == "Strength") %>%
-  transmute(value)
+#### NCT individual edges < .05 (total number of edges 105)
+sum(compare_12$einv.pvals$"p-value" < .05) # 0
+sum(p.adjust(compare_12$einv.pvals$"p-value", "BH") < .05) # 0
 
-graph_replication_strength <-
-  centralityTable(graph_replication$graph) %>% filter(measure == "Strength") %>%
-  transmute(value)
 
-cor(graph_original_strength, graph_replication_strength) # 0.9562717
 
-## .................. plot replication network & combined network ..................
-### estimate communities via walktrap
+## ........................... Visualization of original, replication network & combined network ...........................
+### _____________ estimate communities via walktrap for replication sample _____________
 walktrap.community(as.igraph(qgraph(graph_replication$graph), attributes = TRUE))$membership
 
-### estimate combined network
+### _____________ estimate combined network _____________
 graph_combined <- estimateNetwork(
   rbind.data.frame(graph_data_original, graph_data_replication),
   default = "ggmModSelect",
@@ -786,11 +788,11 @@ graph_combined <- estimateNetwork(
   corMethod = "cor"
 )
 
-### estimate walktrap combined
+### _____________ estimate walktrap for combined sample  _____________
 walktrap.community(as.igraph(qgraph(graph_combined$graph), attributes = TRUE))$membership
 
 # ==> communities are the same across all three graphs. That's why we use the original object for grouping in the plots
-
+### _____________ plot combined, original and replication network next to each other 
 #png(width = 1200, height = 450, "combined_plot.png")
 par(mfrow = c(1, 3))
 qgraph(
