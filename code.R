@@ -28,7 +28,6 @@ demographic_data_replication <-
   da36532.0001 # demographic & clinical vars in here
 
 # ------------------------------------- 2: Data preparation & sample descriptives --------------------------------------
-
 # variable names. Note that for the PSS, we reworded the positive variables for visualization to make interpretation easier
 var_names <- c(
   "Upset by something unexpected",
@@ -55,13 +54,10 @@ var_names <- c(
 # names of PSS-variables that will be recoded
 recode_vars <- c(
   "Not confident to handle personal problems",
-  # pos
   "Things were not going your way",
-  # pos
   "Unable to control irritations in life",
-  # pos
   "Did not feel on top of things"
-  # pos
+  
 )
 
 ## .......................... Original Sample  ..........................
@@ -71,7 +67,7 @@ relevant_IDs_original <- biomarker_data_original %>%
   select(.,
          matches("M2ID|B4QCT_EA|B4QCT_SA|B4QCT_PA|B4QCT_EN|B4QCT_PN|B4Q4")) %>%
   mutate(na_per_row = rowSums(is.na(.) / 15)) %>% #M2ID never missing
-  filter(na_per_row <= 13 / 15) %>%
+  filter(na_per_row <= 13 / 15) %>% # at least two variables available
   transmute(M2ID)
 
 nrow(relevant_IDs_original) # 1252 ==> 3 people do not have at least two variables available, we exclude them
@@ -81,7 +77,7 @@ desc_data_original <- biomarker_data_original %>%
   left_join(demographic_data_original, by = "M2ID") %>%
   filter(M2ID %in% relevant_IDs_original$M2ID) %>%
   transmute(
-    Age = B1PAGE_M2.x,
+    Age = B4ZAGE,
     Sex = ifelse(B1PRSEX.x == "(1) MALE", 1, 0),
     CESD = B4QCESD,
     PSS = B4QPS_PS,
@@ -186,7 +182,7 @@ desc_data_replication <- biomarker_data_replication %>%
   left_join(demographic_data_replication, by = "MRID") %>%
   filter(MRID %in% relevant_IDs_replication$MRID) %>%
   transmute(
-    Age = RA1PRAGE.x,
+    Age = RA4ZAGE,
     Sex = ifelse(RA1PRSEX.x == "(1) MALE", 1, 0),
     CESD = RA4QCESD,
     PSS = RA4QPS_PS,
@@ -280,8 +276,8 @@ desc_combined_data %>%
   select(., c(Sex, Ethnicity, Education)) %>%
   map(
     ~ chisq_test(
-      as.factor(.) ~ as.factor(combined_data$Sample),
-      data = combined_data,
+      as.factor(.) ~ as.factor(desc_combined_data$Sample),
+      data = desc_combined_data,
       distribution = "approximate"
     )
   )
@@ -303,8 +299,8 @@ desc_combined_data %>%
   ) %>%
   map(
     ~ oneway_test(
-      as.numeric(.) ~ as.factor(combined_data$Sample),
-      data = combined_data,
+      as.numeric(.) ~ as.factor(desc_combined_data$Sample),
+      data = desc_combined_data,
       distribution = "approximate"
     )
   )
@@ -350,7 +346,7 @@ desc_combined_data %>%
   map(
     ~ chisq_test(
       as.factor(.) ~ as.factor(desc_combined_data$Sex),
-      data = combined_data,
+      data = desc_combined_data,
       distribution = "approximate"
     )
   )
@@ -373,7 +369,7 @@ desc_combined_data %>%
   map(
     ~ oneway_test(
       as.numeric(.) ~ as.factor(desc_combined_data$Sex),
-      data = combined_data,
+      data = desc_combined_data,
       distribution = "approximate"
     )
   )
