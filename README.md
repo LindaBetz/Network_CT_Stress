@@ -12,3 +12,6 @@ There are two files:
 
 2) Code_Supplementary_Analysis.R provides code to reproduce findings and plots reported in the supplementary file.
 
+Data required for the analysis is available at https://www.icpsr.umich.edu/icpsrweb/ (MIDUS Biomarker, MIDUS Biomarker Refresher, as well as MIDUS II and MIDUS Refresher).
+
+Contact: linda.betz@uk-koeln.de
