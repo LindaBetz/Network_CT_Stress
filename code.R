@@ -463,7 +463,7 @@ graph_original_plot <- qgraph(
 )
 
 
-# -------------------------------------- 4: Sensitvity Analyses -------------------------------------
+# -------------------------------------- 4: Robustness Analyses -------------------------------------
 ## .......................... case-drop bootstrapping ..........................
 results_case <-
   bootnet(graph_original, type = "case", nBoots = 1000)
