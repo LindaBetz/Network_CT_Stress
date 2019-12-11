@@ -1,3 +1,10 @@
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     Code for    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #     
+#                                                                                               #
+#         Relationships between childhood trauma and subjective experiences of stress           #
+#                     in the general population: a network perspective.                         #
+#                                 developed by L. Betz                                          #
+#                                                                                               #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 # ---------------------------- 1: Load libraries & packages -----------------------------
 library(qgraph)
@@ -12,13 +19,15 @@ library(dplyr)
 
 # original sample (= Biomarker "original")
 biomarker_data_original <- da29282.0001 # CTQ, PSS in here
-demographic_data_original <- da04652.0001 # demographic & clinical vars in here
+demographic_data_original <-
+  da04652.0001 # demographic & clinical vars in here
 
 # replication sample (= Biomarker refresher)
 biomarker_data_replication <- da36901.0001 # CTQ, PSS in here
-demographic_data_replication <- da36532.0001 # demographic & clinical vars in here
+demographic_data_replication <-
+  da36532.0001 # demographic & clinical vars in here
 
-# ---------------------------- 2: Data wrangling & sample characteristics -----------------------------
+# ---------------------------- 2: Data wrangling & sample descriptives -----------------------------
 
 # variable names. Note that for the PSS, we reworded the positive variables for visualization to make interpretation easier
 var_names <- c(
@@ -42,6 +51,7 @@ var_names <- c(
   "Emotional Neglect",
   "Physical Neglect"
 )
+
 # names of PSS-variables that will be recoded
 recode_vars <- c(
   "Not confident to handle personal problems",
@@ -54,9 +64,9 @@ recode_vars <- c(
   # pos
 )
 
-# ----------------------------------- ORIGINAL SAMPLE 
+## .................... ORIGINAL SAMPLE  ....................
 
-# filter those people with no missing values
+### filter those people with no missing values
 relevant_IDs_original <- biomarker_data_original %>%
   select(.,
          matches("M2ID|B4QCT_EA|B4QCT_SA|B4QCT_PA|B4QCT_EN|B4QCT_PN|B4Q4")) %>%
@@ -68,15 +78,13 @@ relevant_IDs_original <- biomarker_data_original %>%
 nrow(relevant_IDs_original) # 1252 ==> 3 people do not have at least two variables available, we exclude them
 
 
-# create data set to calculate sample statstiscs
+### create data set to calculate sample statstiscs
 desc_data_original <- biomarker_data_original %>%
   left_join(demographic_data_original, by = "M2ID") %>%
   filter(M2ID %in% relevant_IDs_original$M2ID) %>%
   transmute(
     Age = B1PAGE_M2.x,
     Sex = ifelse(B1PRSEX.x == "(1) MALE", 1, 0),
-    Site =  B4ZSITE,
-    MIDUS_Sample = SAMPLMAJ.x,
     CESD = B4QCESD,
     PSS = B4QPS_PS,
     Emotional_Abuse = B4QCT_EA,
@@ -106,13 +114,13 @@ desc_data_original <- biomarker_data_original %>%
     )
   ) %>% mutate(Sample = "Original")
 
-# frequency/count data
+### frequency/count data
 desc_data_original %>%
   select(., c(Site, MIDUS_Sample, Ethnicity, Education)) %>%
-  map(~ table(.) / sum(!is.na(.))) %>%
-  map(~ round(., 3))
+  map( ~ table(.) / sum(!is.na(.))) %>%
+  map( ~ round(., 3))
 
-# continous data
+### continous data
 desc_data_original %>%
   select(
     .,
@@ -131,11 +139,12 @@ desc_data_original %>%
   summarise_all(c("mean", "sd"), na.rm = TRUE) %>%
   round(., 1)
 
-# make a data set to be used in the estimation of the network
+### make a data set to be used in the estimation of the network
 graph_data_original <- biomarker_data_original %>%
-  # filter(SAMPLMAJ == "(01) MAIN RDD") %>%
   select(.,
-         matches("B1PRSEX|B4QCT_EA|B4QCT_SA|B4QCT_PA|B4QCT_EN|B4QCT_PN|B4Q4")) %>%
+         matches(
+           "B1PRSEX|B4QCT_EA|B4QCT_SA|B4QCT_PA|B4QCT_EN|B4QCT_PN|B4Q4"
+         )) %>%
   `colnames<-`(var_names) %>%
   mutate_all(as.numeric) %>%
   mutate_at(recode_vars,
@@ -160,9 +169,9 @@ graph_data_original <- biomarker_data_original %>%
     everything()
   )
 
-# ------------------------------------ REPLICATION SAMPLE
+## ....................  REPLICATION SAMPLE  ....................
 
-# filter those people with no missing values
+### filter those people with no missing values
 relevant_IDs_replication <- biomarker_data_replication %>%
   select(.,
          matches(
@@ -175,15 +184,13 @@ relevant_IDs_replication <- biomarker_data_replication %>%
 nrow(relevant_IDs_replication) # 862 ==> one person does not have at least two variables, we thus exclude
 
 
-# create data set to calculate sample statstiscs
+### create data set to calculate sample statstiscs
 desc_data_replication <- biomarker_data_replication %>%
   left_join(demographic_data_replication, by = "MRID") %>%
   filter(MRID %in% relevant_IDs_replication$MRID) %>%
   transmute(
     Age = RA1PRAGE.x,
     Sex = ifelse(RA1PRSEX.x == "(1) MALE", 1, 0),
-    Site =  RA4ZSITE,
-    MIDUS_Sample = SAMPLMAJ.y,
     CESD = RA4QCESD,
     PSS = RA4QPS_PS,
     Emotional_Abuse = RA4QCT_EA,
@@ -214,13 +221,13 @@ desc_data_replication <- biomarker_data_replication %>%
   ) %>% mutate(Sample = "Replication")
 
 
-# frequency/count data
+### frequency/count data
 desc_data_replication %>%
   select(., c(Ethnicity, Education)) %>%
-  map(~ table(.) / sum(!is.na(.))) %>%
-  map(~ round(., 3))
+  map( ~ table(.) / sum(!is.na(.))) %>%
+  map( ~ round(., 3))
 
-# continous data
+### continous data
 desc_data_replication %>%
   select(
     .,
@@ -239,7 +246,7 @@ desc_data_replication %>%
   summarise_all(c("mean", "sd"), na.rm = TRUE) %>%
   round(., 1)
 
-# ----------------- Statistical Comparison
+## ....................  Statistical Comparison (original vs. replication sample)  ....................
 combined_data <-
   rbind.data.frame(desc_data_original, desc_data_replication)
 
@@ -275,19 +282,19 @@ combined_data %>%
     )
   )
 
-# ------------------------------------ COMBINED SAMPLE
-# descriptives for combined sample
+## .................... COMBINED SAMPLE ....................
+### descriptives for combined sample
 
 desc_combined_data <-
   rbind.data.frame(desc_data_original, desc_data_replication)
 
-# frequency/count data
+### frequency/count data
 desc_combined_data %>%
   select(., c(Ethnicity, Education)) %>%
-  map(~ table(.) / sum(!is.na(.))) %>%
-  map(~ round(., 3))
+  map( ~ table(.) / sum(!is.na(.))) %>%
+  map( ~ round(., 3))
 
-# continous data
+### continous data
 desc_combined_data %>%
   select(
     .,
@@ -306,20 +313,21 @@ desc_combined_data %>%
   summarise_all(c("mean", "sd"), na.rm = TRUE) %>%
   round(., 1)
 
-# ------------------------------------ MALES vs. FEMALES
-# ----------------- Descriptives
+## .................... MALES vs. FEMALES ....................
+## Descriptives ~ 0 = women, 1 = men
 
-# 0 = women, 1 = men
-# frequency/count data
+### frequency/count data
 desc_combined_data %>%
   select(., c(Sex, Ethnicity, Education)) %>%
-  split(.$Sex) %>% 
-  map(~select(., -c("Sex"))) %>% # remove sex variable after grouping
-  map(~ c(table(.$Ethnicity) / sum(!is.na(.$Ethnicity)),
-         table(.$Education) / sum(!is.na(.$Education)))) %>%
-  map(~ round(., 3))
+  split(.$Sex) %>%
+  map( ~ select(.,-c("Sex"))) %>% # remove sex variable after grouping
+  map( ~ c(
+    table(.$Ethnicity) / sum(!is.na(.$Ethnicity)),
+    table(.$Education) / sum(!is.na(.$Education))
+  )) %>%
+  map( ~ round(., 3))
 
-# continous data
+### continous data
 desc_combined_data  %>%
   select(
     .,
@@ -338,7 +346,8 @@ desc_combined_data  %>%
   summarise_all(c("mean", "sd"), na.rm = TRUE) %>%
   round(., 1)
 
-# ----------------- Statistical Comparison
+## .................... Statistical Comparison (male vs. female sample) ...................
+### frequency data
 set.seed(1)
 desc_combined_data %>%
   select(., c(Ethnicity, Education)) %>%
@@ -350,6 +359,7 @@ desc_combined_data %>%
     )
   )
 
+### interval data
 desc_combined_data %>%
   select(
     .,
@@ -373,8 +383,7 @@ desc_combined_data %>%
   )
 
 # ---------------------------- 3: Network estimation & visualization -----------------------------
-
-# estimate network
+## .................... estimate network ....................
 graph_original <- estimateNetwork(
   graph_data_original,
   default = "ggmModSelect",
@@ -385,11 +394,12 @@ graph_original <- estimateNetwork(
   corMethod = "cor"
 )
 
-# estimate communities via walktrap
-g <- as.igraph(qgraph(graph_original$graph, DoNotPlot=TRUE), attributes = TRUE)
+## ................... estimate communities via walktrap ...................
+g <-
+  as.igraph(qgraph(graph_original$graph, DoNotPlot = TRUE), attributes = TRUE)
 wtc <- walktrap.community(g)
 
-# layout for network
+## ................... layout for network ...................
 layout_network <- as.matrix(data.frame(
   x =  c(
     0.702164557,
@@ -427,7 +437,7 @@ layout_network <- as.matrix(data.frame(
   )
 ))
 
-# plot network
+## .................. plot network  ..................
 graph_original_plot <- qgraph(
   graph_original$graph,
   layout = layout_network,
@@ -444,14 +454,13 @@ graph_original_plot <- qgraph(
   layoutScale = c(1.14, 1.05),
   label.cex = 0.99,
   filetype = "png",
-  legend.mode="style1",
+  legend.mode = "style1",
   color =  c("grey",
-    "#EBCC2A",
-    "#78B7C5"
-  ),
+             "#EBCC2A",
+             "#78B7C5"),
   label.prop = 0.96,
-  vsize=5.1,
-  DoNotPlot=F,
+  vsize = 5.1,
+  DoNotPlot = F,
   nodeNames = colnames(graph_original$graph),
   filename = "main_figure",
   legend.cex = 0.69
@@ -459,12 +468,12 @@ graph_original_plot <- qgraph(
 
 
 # ---------------------------- 4: Sensitvity Analyses -----------------------------
-# case-drop bootstrapping
+## .................. case-drop bootstrapping ..................
 results_case <-
   bootnet(graph_original, type = "case", nBoots = 1000)
 corStability(results_case) # 0.75 for edge & strength
 
-# supplementary plot: case-dropping strength
+### supplementary plot: case-dropping strength
 #png(filename="case_dropping_strength.png", width=600, height=400)
 plot(results_case, statistics = "strength") +
   scale_y_continuous(breaks = seq(0.5, 1, by = 0.1), limits = c(0.5, 1)) +
@@ -476,7 +485,7 @@ plot(results_case, statistics = "strength") +
   )
 #dev.off()
 
-# supplementary plot: case-dropping edge
+### supplementary plot: case-dropping edge
 #png(filename="case_dropping_edge.png", width=600, height=400)
 plot(results_case, statistics = c("edge")) +
   scale_y_continuous(breaks = seq(0.5, 1, by = 0.1), limits = c(0.5, 1)) +
@@ -489,10 +498,10 @@ plot(results_case, statistics = c("edge")) +
 #dev.off()
 
 
-# regular bootstrapping for edge weights
+## .................. regular bootstrapping for edge weights  ..................
 results_boot <- bootnet(graph_original, nBoots = 1000)
 
-# supplementary plot: bootstrapped edges
+### supplementary plot: bootstrapped edges
 #png("bootstrapped_edges.png", height=1400, width=600, pointsize = 12.5)
 plot(
   results_boot,
@@ -505,12 +514,15 @@ plot(
 #dev.off()
 
 # ---------------------------- 5: Comparison Sex Differences -----------------------------
+## .................. data set preparation ..................
 
 # here, we first merge the original and replication sample to retain sufficient power
 graph_data_sex <- biomarker_data_original %>%
   filter(M2ID %in% relevant_IDs_original$M2ID) %>%
   select(.,
-         matches("B1PRSEX|B4QCT_EA|B4QCT_SA|B4QCT_PA|B4QCT_EN|B4QCT_PN|B4Q4")) %>%
+         matches(
+           "B1PRSEX|B4QCT_EA|B4QCT_SA|B4QCT_PA|B4QCT_EN|B4QCT_PN|B4Q4"
+         )) %>%
   `colnames<-`(c("Sex", var_names)) %>%
   mutate_all(as.numeric) %>%
   mutate_at(recode_vars,
@@ -524,7 +536,9 @@ graph_data_sex <- biomarker_data_original %>%
               `5` = 1,
               .missing = NA_real_
             )) %>%
-  select(Sex, # 1 = male, 2 = female
+  select(
+    Sex,
+    # 1 = male, 2 = female
     # change order of items, to make plot nicer later
     `Emotional Neglect`,
     `Physical Neglect`,
@@ -533,36 +547,46 @@ graph_data_sex <- biomarker_data_original %>%
     `Sexual Abuse`,
     everything()
   ) %>%
-  bind_rows(biomarker_data_replication %>% # here we bind the replication sample to the original sample
-              filter(MRID %in% relevant_IDs_replication$MRID) %>%
-              select(.,
-                     matches("RA1PRSEX|RA4QCT_EA|RA4QCT_SA|RA4QCT_PA|RA4QCT_EN|RA4QCT_PN|RA4Q4")) %>%
-              `colnames<-`(c("Sex", var_names)) %>%
-              mutate_all(as.numeric) %>%
-              mutate_at(recode_vars,
-                        ~ recode(
-                          # recode positive items
-                          .,
-                          `1` = 5,
-                          `2` = 4,
-                          `3` = 3,
-                          `4` = 2,
-                          `5` = 1,
-                          .missing = NA_real_
-                        )) %>%
-              select(Sex, # 1 = male, 2 = female
-                     # change order of items, to make plot nicer later
-                     `Emotional Neglect`,
-                     `Physical Neglect`,
-                     `Emotional Abuse`,
-                     `Physical Abuse`,
-                     `Sexual Abuse`,
-                     everything()
-              )) %>%  split(.$Sex) %>% 
- map(~select(., -c("Sex"))) # remove sex variable after grouping
+  bind_rows(
+    biomarker_data_replication %>% # here we bind the replication sample to the original sample
+      filter(MRID %in% relevant_IDs_replication$MRID) %>%
+      select(
+        .,
+        matches(
+          "RA1PRSEX|RA4QCT_EA|RA4QCT_SA|RA4QCT_PA|RA4QCT_EN|RA4QCT_PN|RA4Q4"
+        )
+      ) %>%
+      `colnames<-`(c("Sex", var_names)) %>%
+      mutate_all(as.numeric) %>%
+      mutate_at(
+        recode_vars,
+        ~ recode(
+          # recode positive items
+          .,
+          `1` = 5,
+          `2` = 4,
+          `3` = 3,
+          `4` = 2,
+          `5` = 1,
+          .missing = NA_real_
+        )
+      ) %>%
+      select(
+        Sex,
+        # 1 = male, 2 = female
+        # change order of items, to make plot nicer later
+        `Emotional Neglect`,
+        `Physical Neglect`,
+        `Emotional Abuse`,
+        `Physical Abuse`,
+        `Sexual Abuse`,
+        everything()
+      )
+  ) %>%  split(.$Sex) %>%
+  map( ~ select(.,-c("Sex"))) # remove sex variable after grouping
 
 
-# ----------------- estimate male network
+## .................. estimate male network ..................
 graph_male <- estimateNetwork(
   graph_data_sex$`1`,
   default = "ggmModSelect",
@@ -573,7 +597,7 @@ graph_male <- estimateNetwork(
   corMethod = "cor"
 )
 
-# ----------------- estimate female network
+## .................. estimate female network ..................
 graph_female <- estimateNetwork(
   graph_data_sex$`2`,
   default = "ggmModSelect",
@@ -584,7 +608,7 @@ graph_female <- estimateNetwork(
   corMethod = "cor"
 )
 
-# ----------------- run network comparison 
+## .................. network comparison (male & female network) ..................
 set.seed(1994)
 compare_male_female <-
   NCT(
@@ -596,32 +620,38 @@ compare_male_female <-
     progressbar = TRUE
   )
 
-p.adjust(compare_male_female$einv.pvals$`p-value`, method = "BH")
-  
-# ------------- Plotting networks
-png(width=1250, height=450, "male_female_plot.png")
+### NCT global strength
+compare_male_female$glstrinv.pval # 0.044
+
+### NCT Structure differences
+compare_male_female$nwinv.pval # 0.603
+
+### NCT quantification of differences: count significantly different edges
+sum(p.adjust(compare_male_female$einv.pvals$`p-value`, method = "BH") < .05) # 0
+
+## .................. Plotting networks ..................
+#png(width=1250, height=450, "male_female_plot.png")
 layout(matrix(c(1, 2), 1, 2, byrow = TRUE), widths = c(2.5, 4))
 qgraph(
   graph_male$graph,
   title.cex = 1.75,
-  edge.width=1,
+  edge.width = 1,
   layout = layout_network,
   theme = "Borkulo",
   labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10),
-  legend=F,
+  legend = F,
   groups =  recode(
     wtc$membership,
     `2` = "Childhood Trauma",
     `1` = "Perceived Helplessness",
     `3` = "Perceived Self-Efficacy"
   ),
-  legend.mode="style1",
+  legend.mode = "style1",
   color =  c("grey",
              "#EBCC2A",
-             "#78B7C5"
-  ),
-  label.cex = 1.45, 
-  DoNotPlot=F,
+             "#78B7C5"),
+  label.cex = 1.45,
+  DoNotPlot = F,
   legend.cex = 0.69,
   vsize = 8,
   title = "Men",
@@ -633,42 +663,41 @@ qgraph(
 qgraph(
   graph_female$graph,
   layout = layout_network,
-  edge.width=0.75,
+  edge.width = 0.75,
   theme = "Borkulo",
   labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10),
-  legend=T,
+  legend = T,
   GLratio = 2.25,
   groups =  recode(
     wtc$membership,
     `2` = "Childhood Trauma",
     `1` = "Perceived Helplessness",
-    `3` = "Perceived Self-Efficacy"),
+    `3` = "Perceived Self-Efficacy"
+  ),
   layoutOffset = c(-0.305, 0),
   layoutScale = c(0.89, 1),
-    legend.mode="style1",
-    color =  c("grey",
-               "#EBCC2A",
-               "#78B7C5"
-    ),
+  legend.mode = "style1",
+  color =  c("grey",
+             "#EBCC2A",
+             "#78B7C5"),
   label.cex = 1.375,
   vsize = 6.25,
-  DoNotPlot=F,
-    nodeNames = colnames(graph_original$graph),
+  DoNotPlot = F,
+  nodeNames = colnames(graph_original$graph),
   legend.cex = 0.65,
   title = "Women",
   minimum = 0,
   title.cex = 1.75,
   maximum = 0.4814082
-  )
+)
 
-dev.off()
+#dev.off()
 
 
 # ---------------------------- 5: Replication Analyses -----------------------------
-
+## .................. data set preparation ..................
 # extract relevant variables from data set, basic "preprocessing" as above
 graph_data_replication <- biomarker_data_replication %>%
-  # filter(SAMPLMAJ == "(01) MAIN RDD") %>%
   select(.,
          matches("RA4QCT_EA|RA4QCT_SA|RA4QCT_PA|RA4QCT_EN|RA4QCT_PN|RA4Q4")) %>%
   `colnames<-`(var_names) %>%
@@ -694,7 +723,7 @@ graph_data_replication <- biomarker_data_replication %>%
     everything()
   )
 
-# estimate replication network
+## .................. estimate replication network ..................
 graph_replication <- estimateNetwork(
   graph_data_replication,
   default = "ggmModSelect",
@@ -705,12 +734,12 @@ graph_replication <- estimateNetwork(
   corMethod = "cor"
 )
 
-# basic comparison: correlate the two partial correlation matrices
+## .................. network comparison (original & replication network) ..................
+### basic comparison: correlate the two partial correlation matrices
 cor(c(graph_original$graph), c(graph_replication$graph)) # 0.9242128
 
-# Network Comparison for Differences in Structure, Global Strength & Individual Edges
+### Network Comparison for Differences in Structure, Global Strength & Individual Edges
 set.seed(1337)
-# may take longer to run on a standard PC!
 compare_12 <-
   NCT(
     graph_original,
@@ -721,17 +750,17 @@ compare_12 <-
     progressbar = TRUE
   )
 
-# NCT Structure differences
+### NCT Structure differences
 compare_12$nwinv.pval #  0.783
 
-# NCT quantification of differences: count significantly different edges (total number of edges 105)
+### NCT quantification of differences: count significantly different edges (total number of edges 105)
 sum(compare_12$einv.pvals$"p-value" < 0.05) # 0
 sum(p.adjust(compare_12$einv.pvals$"p-value", "BH") < 0.05) # 0
 
-# NCT global strength
+### NCT global strength
 compare_12$glstrinv.pval # 0.496
 
-# correlate strength centrality indices
+### correlate strength centrality indices
 graph_original_strength <-
   centralityTable(graph_original$graph) %>% filter(measure == "Strength") %>%
   transmute(value)
@@ -742,11 +771,11 @@ graph_replication_strength <-
 
 cor(graph_original_strength, graph_replication_strength) # 0.9562717
 
-# plot replication network & combined network
-# estimate communities via walktrap
+## .................. plot replication network & combined network ..................
+### estimate communities via walktrap
 walktrap.community(as.igraph(qgraph(graph_replication$graph), attributes = TRUE))$membership
 
-# estimate combined network
+### estimate combined network
 graph_combined <- estimateNetwork(
   rbind.data.frame(graph_data_original, graph_data_replication),
   default = "ggmModSelect",
@@ -757,20 +786,19 @@ graph_combined <- estimateNetwork(
   corMethod = "cor"
 )
 
-# walktrap combined
+### estimate walktrap combined
 walktrap.community(as.igraph(qgraph(graph_combined$graph), attributes = TRUE))$membership
 
-# communities are the same across all three graphs. That's why we use the original object for grouping in the plots
+# ==> communities are the same across all three graphs. That's why we use the original object for grouping in the plots
 
-
-png(width=1200, height=450, "combined_plot.png")
-par(mfrow=c(1,3))
+#png(width = 1200, height = 450, "combined_plot.png")
+par(mfrow = c(1, 3))
 qgraph(
   graph_original$graph,
   layout = layout_network,
   theme = "Borkulo",
   labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10),
-  legend=F,
+  legend = F,
   GLratio = 1.1,
   groups =  recode(
     wtc$membership,
@@ -783,16 +811,15 @@ qgraph(
   label.cex = 0.99,
   color =  c("grey",
              "#EBCC2A",
-             "#78B7C5"
-  ),
+             "#78B7C5"),
   label.prop = 0.96,
-  vsize=13,
-  DoNotPlot=F,
+  vsize = 13,
+  DoNotPlot = F,
   nodeNames = colnames(graph_original$graph),
   minimum = 0,
   maximum = 0.483,
-  title="a) Original",
-  title.cex=3
+  title = "a) Original",
+  title.cex = 3
 )
 
 qgraph(
@@ -800,7 +827,7 @@ qgraph(
   layout = layout_network,
   theme = "Borkulo",
   labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10),
-  legend=F,
+  legend = F,
   GLratio = 1.1,
   groups =  recode(
     wtc$membership,
@@ -813,16 +840,15 @@ qgraph(
   label.cex = 0.99,
   color =  c("grey",
              "#EBCC2A",
-             "#78B7C5"
-  ),
+             "#78B7C5"),
   label.prop = 0.96,
-  vsize=13,
-  DoNotPlot=F,
+  vsize = 13,
+  DoNotPlot = F,
   nodeNames = colnames(graph_original$graph),
   minimum = 0,
   maximum = 0.483,
-  title="b) Replication",
-  title.cex=3
+  title = "b) Replication",
+  title.cex = 3
 )
 
 qgraph(
@@ -830,7 +856,7 @@ qgraph(
   layout = layout_network,
   theme = "Borkulo",
   labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10),
-  legend=F,
+  legend = F,
   GLratio = 1.1,
   groups =  recode(
     wtc$membership,
@@ -843,17 +869,16 @@ qgraph(
   label.cex = 0.99,
   color =  c("grey",
              "#EBCC2A",
-             "#78B7C5"
-  ),
+             "#78B7C5"),
   label.prop = 0.96,
-  vsize=14,
-  DoNotPlot=F,
+  vsize = 14,
+  DoNotPlot = F,
   nodeNames = colnames(graph_original$graph),
   minimum = 0,
   maximum = 0.483,
-  title="c) Combined",
-  title.cex=3
+  title = "c) Combined",
+  title.cex = 3
   
 )
 
-dev.off()
+#dev.off()
