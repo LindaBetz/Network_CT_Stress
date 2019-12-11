@@ -1,12 +1,14 @@
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     Code for    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
-#                                                                                               #
-#         Relationships between childhood trauma and subjective experiences of stress           #
-#                     in the general population: a network perspective.                         #
-#                                 developed by L. Betz                                          #
-#                                                                                               #
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~     Code for    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+#                                                                                                     #
+#             Relationships between childhood trauma and subjective experiences of stress             #
+#                         in the general population: a network perspective.                           #
+#                                     developed by L. Betz                                            #
+#                                                                                                     #
+#                               - Analysis reported in main manuscript -                              #
+#                                                                                                     #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
-# ------------------------------------- 1: Load libraries & packages --------------------------------------
+# ---------------------------------- 1: Load libraries & packages -----------------------------------
 library(qgraph)
 library(igraph)
 library(bootnet)
@@ -27,7 +29,7 @@ biomarker_data_replication <- da36901.0001 # CTQ, PSS in here
 demographic_data_replication <-
   da36532.0001 # demographic & clinical vars in here
 
-# ------------------------------------- 2: Data preparation & sample descriptives --------------------------------------
+# ---------------------------------- 2: Data preparation & sample descriptives -----------------------------------
 # variable names. Note that for the PSS, we reworded the positive variables for visualization to make interpretation easier
 var_names <- c(
   "Upset by something unexpected",
@@ -374,7 +376,7 @@ desc_combined_data %>%
     )
   )
 
-# -------------------------------------- 3: Network estimation & visualization -------------------------------------
+# ----------------------------------- 3: Network estimation & visualization ----------------------------------
 ## .......................... estimate network ..........................
 graph_original <- estimateNetwork(
   graph_data_original,
@@ -459,53 +461,86 @@ graph_original_plot <- qgraph(
 )
 
 
-# -------------------------------------- 4: Robustness Analyses -------------------------------------
-## .......................... case-drop bootstrapping ..........................
-results_case <-
-  bootnet(graph_original, type = "case", nBoots = 1000)
-corStability(results_case) # 0.75 for edge & strength
-
-### _____________ supplementary plot: case-dropping strength _____________
-#png(filename="case_dropping_strength.png", width=600, height=400)
-plot(results_case, statistics = "strength") +
-  scale_y_continuous(breaks = seq(0.5, 1, by = 0.1), limits = c(0.5, 1)) +
-  theme(
-    legend.title = element_text(size = 15),
-    axis.title = element_text(size = 15),
-    legend.text = element_text(size = 14),
-    axis.text = element_text(size = 14)
+# ----------------------------------  4: Replication Analyses ----------------------------------- 
+## ........................... data set preparation ...........................
+# extract relevant variables from data set, basic "preprocessing" as above
+graph_data_replication <- biomarker_data_replication %>%
+  select(.,
+         matches("RA4QCT_EA|RA4QCT_SA|RA4QCT_PA|RA4QCT_EN|RA4QCT_PN|RA4Q4")) %>%
+  `colnames<-`(var_names) %>%
+  mutate_all(as.numeric) %>%
+  mutate_at(recode_vars,
+            ~ recode(
+              # recode positive items
+              .,
+              `1` = 5,
+              `2` = 4,
+              `3` = 3,
+              `4` = 2,
+              `5` = 1,
+              .missing = NA_real_
+            )) %>%
+  select(
+    # change order of items, to make plot nicer later
+    `Emotional Neglect`,
+    `Physical Neglect`,
+    `Emotional Abuse`,
+    `Physical Abuse`,
+    `Sexual Abuse`,
+    everything()
   )
-#dev.off()
 
-### _____________ supplementary plot: case-dropping edge _____________
-#png(filename="case_dropping_edge.png", width=600, height=400)
-plot(results_case, statistics = c("edge")) +
-  scale_y_continuous(breaks = seq(0.5, 1, by = 0.1), limits = c(0.5, 1)) +
-  theme(
-    legend.title = element_text(size = 15),
-    axis.title = element_text(size = 15),
-    legend.text = element_text(size = 14),
-    axis.text = element_text(size = 14)
+## ........................... estimate replication network ...........................
+graph_replication <- estimateNetwork(
+  graph_data_replication,
+  default = "ggmModSelect",
+  tuning = 0,
+  stepwise = TRUE,
+  missing = "pairwise",
+  corArgs = list(method = "spearman"),
+  corMethod = "cor"
+)
+
+## ........................... network comparison (original & replication network) ..........................
+### _____________  basic comparison: correlate the two partial correlation matrices _____________
+cor(c(graph_original$graph), c(graph_replication$graph)) # 0.9242128
+
+### _____________ basic comparison: correlate strength centrality indices _____________
+
+graph_original_strength <-
+  centralityTable(graph_original$graph) %>% filter(measure == "Strength") %>%
+  transmute(value)
+
+graph_replication_strength <-
+  centralityTable(graph_replication$graph) %>% filter(measure == "Strength") %>%
+  transmute(value)
+
+cor(graph_original_strength, graph_replication_strength) # 0.9562717
+
+### _____________ NCT for differences in structure, global strength & individual edges _____________
+set.seed(1337)
+compare_12 <-
+  NCT(
+    graph_original,
+    graph_replication,
+    it = 1000,
+    test.edges = TRUE,
+    edges = 'all',
+    progressbar = TRUE
   )
-#dev.off()
+
+#### NCT structure differences
+compare_12$nwinv.pval #  0.783
+
+#### NCT global strength
+compare_12$glstrinv.pval # 0.496
+
+#### NCT individual edges < .05 (total number of edges 105)
+sum(compare_12$einv.pvals$"p-value" < .05) # 0
+sum(p.adjust(compare_12$einv.pvals$"p-value", "BH") < .05) # 0
 
 
-## .......................... regular bootstrapping for edge weights  ..........................
-results_boot <- bootnet(graph_original, nBoots = 1000)
-
-### supplementary plot: bootstrapped edges
-#png("bootstrapped_edges.png", height=1400, width=600, pointsize = 12.5)
-plot(
-  results_boot,
-  order = "sample",
-  split0 = TRUE,
-  labels = TRUE,
-  legend = TRUE,
-  prop0_cex = 2
-) + theme(text = element_text(size = 13))
-#dev.off()
-
-# ------------------------------------- 5: Network Comparison Sex Differences -------------------------------------
+# ---------------------------------- 5: Network Comparison Sex Differences ----------------------------------
 ## ........................... data set preparation ..........................
 
 # here, we first merge the original and replication sample to retain sufficient power
@@ -685,194 +720,3 @@ qgraph(
 
 #dev.off()
 
-
-# -------------------------------------  6: Replication Analyses -------------------------------------- 
-## ........................... data set preparation ...........................
-# extract relevant variables from data set, basic "preprocessing" as above
-graph_data_replication <- biomarker_data_replication %>%
-  select(.,
-         matches("RA4QCT_EA|RA4QCT_SA|RA4QCT_PA|RA4QCT_EN|RA4QCT_PN|RA4Q4")) %>%
-  `colnames<-`(var_names) %>%
-  mutate_all(as.numeric) %>%
-  mutate_at(recode_vars,
-            ~ recode(
-              # recode positive items
-              .,
-              `1` = 5,
-              `2` = 4,
-              `3` = 3,
-              `4` = 2,
-              `5` = 1,
-              .missing = NA_real_
-            )) %>%
-  select(
-    # change order of items, to make plot nicer later
-    `Emotional Neglect`,
-    `Physical Neglect`,
-    `Emotional Abuse`,
-    `Physical Abuse`,
-    `Sexual Abuse`,
-    everything()
-  )
-
-## ........................... estimate replication network ...........................
-graph_replication <- estimateNetwork(
-  graph_data_replication,
-  default = "ggmModSelect",
-  tuning = 0,
-  stepwise = TRUE,
-  missing = "pairwise",
-  corArgs = list(method = "spearman"),
-  corMethod = "cor"
-)
-
-## ........................... network comparison (original & replication network) ..........................
-### _____________  basic comparison: correlate the two partial correlation matrices _____________
-cor(c(graph_original$graph), c(graph_replication$graph)) # 0.9242128
-
-### _____________ basic comparison: correlate strength centrality indices _____________
-
-graph_original_strength <-
-  centralityTable(graph_original$graph) %>% filter(measure == "Strength") %>%
-  transmute(value)
-
-graph_replication_strength <-
-  centralityTable(graph_replication$graph) %>% filter(measure == "Strength") %>%
-  transmute(value)
-
-cor(graph_original_strength, graph_replication_strength) # 0.9562717
-
-### _____________ NCT for differences in structure, global strength & individual edges _____________
-set.seed(1337)
-compare_12 <-
-  NCT(
-    graph_original,
-    graph_replication,
-    it = 1000,
-    test.edges = TRUE,
-    edges = 'all',
-    progressbar = TRUE
-  )
-
-#### NCT structure differences
-compare_12$nwinv.pval #  0.783
-
-#### NCT global strength
-compare_12$glstrinv.pval # 0.496
-
-#### NCT individual edges < .05 (total number of edges 105)
-sum(compare_12$einv.pvals$"p-value" < .05) # 0
-sum(p.adjust(compare_12$einv.pvals$"p-value", "BH") < .05) # 0
-
-
-## ........................... visualization of original, replication network & combined network ...........................
-### _____________ estimate communities via walktrap for replication sample _____________
-walktrap.community(as.igraph(qgraph(graph_replication$graph), attributes = TRUE))$membership
-
-### _____________ estimate combined network _____________
-graph_combined <- estimateNetwork(
-  rbind.data.frame(graph_data_original, graph_data_replication),
-  default = "ggmModSelect",
-  tuning = 0,
-  stepwise = TRUE,
-  missing = "pairwise",
-  corArgs = list(method = "spearman"),
-  corMethod = "cor"
-)
-
-### _____________ estimate walktrap for combined sample  _____________
-walktrap.community(as.igraph(qgraph(graph_combined$graph), attributes = TRUE))$membership
-
-# ==> communities are the same across all three graphs. That's why we use the original object for grouping in the plots
-### _____________ supplementary plot: combined, original and replication network next to each other
-#png(width = 1200, height = 450, "combined_plot.png")
-par(mfrow = c(1, 3))
-qgraph(
-  graph_original$graph,
-  layout = layout_network,
-  theme = "Borkulo",
-  labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10),
-  legend = F,
-  GLratio = 1.1,
-  groups =  recode(
-    wtc$membership,
-    `2` = "Childhood Trauma",
-    `1` = "Perceived Helplessness",
-    `3` = "Perceived Self-Efficacy"
-  ),
-  layoutOffset = c(-0.05, 0),
-  layoutScale = c(1, 1.05),
-  label.cex = 0.99,
-  color =  c("grey",
-             "#EBCC2A",
-             "#78B7C5"),
-  label.prop = 0.96,
-  vsize = 13,
-  DoNotPlot = F,
-  nodeNames = colnames(graph_original$graph),
-  minimum = 0,
-  maximum = 0.483,
-  title = "a) Original",
-  title.cex = 3
-)
-
-qgraph(
-  graph_replication$graph,
-  layout = layout_network,
-  theme = "Borkulo",
-  labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10),
-  legend = F,
-  GLratio = 1.1,
-  groups =  recode(
-    wtc$membership,
-    `2` = "Childhood Trauma",
-    `1` = "Perceived Helplessness",
-    `3` = "Perceived Self-Efficacy"
-  ),
-  layoutOffset = c(-0.05, 0),
-  layoutScale = c(1, 1.05),
-  label.cex = 0.99,
-  color =  c("grey",
-             "#EBCC2A",
-             "#78B7C5"),
-  label.prop = 0.96,
-  vsize = 13,
-  DoNotPlot = F,
-  nodeNames = colnames(graph_original$graph),
-  minimum = 0,
-  maximum = 0.483,
-  title = "b) Replication",
-  title.cex = 3
-)
-
-qgraph(
-  graph_combined$graph,
-  layout = layout_network,
-  theme = "Borkulo",
-  labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10),
-  legend = F,
-  GLratio = 1.1,
-  groups =  recode(
-    wtc$membership,
-    `2` = "Childhood Trauma",
-    `1` = "Perceived Helplessness",
-    `3` = "Perceived Self-Efficacy"
-  ),
-  layoutOffset = c(-0.05, 0),
-  layoutScale = c(1, 1.05),
-  label.cex = 0.99,
-  color =  c("grey",
-             "#EBCC2A",
-             "#78B7C5"),
-  label.prop = 0.96,
-  vsize = 14,
-  DoNotPlot = F,
-  nodeNames = colnames(graph_original$graph),
-  minimum = 0,
-  maximum = 0.483,
-  title = "c) Combined",
-  title.cex = 3
-  
-)
-
-#dev.off()
