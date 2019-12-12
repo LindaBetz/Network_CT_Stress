@@ -112,8 +112,8 @@ desc_data_original <- biomarker_data_original %>%
 ### frequency/count data
 desc_data_original %>%
   select(., c(Ethnicity, Education)) %>%
-  map(~ table(.) / sum(!is.na(.))) %>%
-  map(~ round(., 3))
+  map( ~ table(.) / sum(!is.na(.))) %>%
+  map( ~ round(., 3))
 
 ### interval data
 desc_data_original %>%
@@ -137,9 +137,7 @@ desc_data_original %>%
 ### make a data set to be used in the estimation of the network
 graph_data_original <- biomarker_data_original %>%
   select(.,
-         matches(
-           "B4QCT_EA|B4QCT_SA|B4QCT_PA|B4QCT_EN|B4QCT_PN|B4Q4"
-         )) %>%
+         matches("B4QCT_EA|B4QCT_SA|B4QCT_PA|B4QCT_EN|B4QCT_PN|B4Q4")) %>%
   `colnames<-`(var_names) %>%
   mutate_all(as.numeric) %>%
   mutate_at(recode_vars,
@@ -217,8 +215,8 @@ desc_data_replication <- biomarker_data_replication %>%
 ### frequency/count data
 desc_data_replication %>%
   select(., c(Ethnicity, Education)) %>%
-  map(~ table(.) / sum(!is.na(.))) %>%
-  map(~ round(., 3))
+  map( ~ table(.) / sum(!is.na(.))) %>%
+  map( ~ round(., 3))
 
 ### interval data
 desc_data_replication %>%
@@ -241,6 +239,7 @@ desc_data_replication %>%
 
 
 ## .......................... Combined Sample (original + replication) ..........................
+
 ### _____________ descriptives for combined sample _____________
 desc_combined_data <-
   rbind.data.frame(desc_data_original, desc_data_replication) # combine both samples into one df
@@ -248,8 +247,8 @@ desc_combined_data <-
 #### frequency/count data
 desc_combined_data %>%
   select(., c(Ethnicity, Education)) %>%
-  map(~ table(.) / sum(!is.na(.))) %>%
-  map(~ round(., 3))
+  map( ~ table(.) / sum(!is.na(.))) %>%
+  map( ~ round(., 3))
 
 #### continous data
 desc_combined_data %>%
@@ -272,6 +271,7 @@ desc_combined_data %>%
 
 ### _____________  Statistical Comparison (original vs. replication sample) _____________
 #### frequency data
+set.seed(1)
 desc_combined_data %>%
   select(., c(Sex, Ethnicity, Education)) %>%
   map(
@@ -306,17 +306,18 @@ desc_combined_data %>%
   )
 
 ## .......................... Subgroups: Males & Female ..........................
+
 ### _____________ descriptives for males and females _____________
 #### frequency/count data
 desc_combined_data %>%
   select(., c(Sex, Ethnicity, Education)) %>%
   split(.$Sex) %>% # 0 = women, 1 = men
-  map(~ select(., -c("Sex"))) %>% # remove sex variable after grouping
-  map(~ c(
+  map( ~ select(.,-c("Sex"))) %>% # remove sex variable after grouping
+  map( ~ c(
     table(.$Ethnicity) / sum(!is.na(.$Ethnicity)),
     table(.$Education) / sum(!is.na(.$Education))
   )) %>%
-  map(~ round(., 3))
+  map( ~ round(., 3))
 
 #### continous data
 desc_combined_data  %>%
@@ -374,7 +375,9 @@ desc_combined_data %>%
   )
 
 # ----------------------------------- 3: Network estimation & visualization ----------------------------------
+
 ## .......................... estimate network ..........................
+
 graph_original <- estimateNetwork(
   graph_data_original,
   default = "ggmModSelect",
@@ -386,11 +389,13 @@ graph_original <- estimateNetwork(
 )
 
 ## ........................... estimate communities via walktrap ..........................
+
 g <-
   as.igraph(qgraph(graph_original$graph, DoNotPlot = TRUE), attributes = TRUE)
 wtc <- walktrap.community(g)
 
 ## .......................... layout for network ..........................
+
 layout_network <- as.matrix(data.frame(
   x =  c(
     0.702164557,
@@ -429,6 +434,7 @@ layout_network <- as.matrix(data.frame(
 ))
 
 ## .......................... plot network  ..........................
+
 graph_original_plot <- qgraph(
   graph_original$graph,
   layout = layout_network,
@@ -458,8 +464,10 @@ graph_original_plot <- qgraph(
 )
 
 
-# ----------------------------------  4: Replication Analyses ----------------------------------- 
+# ----------------------------------  4: Replication Analyses -----------------------------------
+
 ## ........................... data set preparation ...........................
+
 # extract relevant variables from data set, basic "preprocessing" as above
 graph_data_replication <- biomarker_data_replication %>%
   select(.,
@@ -488,6 +496,7 @@ graph_data_replication <- biomarker_data_replication %>%
   )
 
 ## ........................... estimate replication network ...........................
+
 graph_replication <- estimateNetwork(
   graph_data_replication,
   default = "ggmModSelect",
@@ -499,11 +508,11 @@ graph_replication <- estimateNetwork(
 )
 
 ## ........................... network comparison (original & replication network) ..........................
+
 ### _____________  basic comparison: correlate the two partial correlation matrices _____________
 cor(c(graph_original$graph), c(graph_replication$graph)) # 0.9242128
 
 ### _____________ basic comparison: correlate strength centrality indices _____________
-
 graph_original_strength <-
   centralityTable(graph_original$graph) %>% filter(measure == "Strength") %>%
   transmute(value)
@@ -538,6 +547,7 @@ sum(p.adjust(compare_12$einv.pvals$"p-value", "BH") < .05) # 0
 
 
 # ---------------------------------- 5: Network Comparison Sex Differences ----------------------------------
+
 ## ........................... data set preparation ..........................
 
 # here, we first merge the original and replication sample to retain sufficient power
@@ -607,10 +617,11 @@ graph_data_sex <- biomarker_data_original %>%
         everything()
       )
   ) %>%  split(.$Sex) %>%
-  map(~ select(., -c("Sex"))) # remove sex variable after grouping
+  map( ~ select(.,-c("Sex"))) # remove sex variable after grouping
 
 
 ## .......................... estimate male network ..........................
+
 graph_male <- estimateNetwork(
   graph_data_sex$`1`,
   default = "ggmModSelect",
@@ -622,6 +633,7 @@ graph_male <- estimateNetwork(
 )
 
 ## ........................... estimate female network ..........................
+
 graph_female <- estimateNetwork(
   graph_data_sex$`2`,
   default = "ggmModSelect",
@@ -633,6 +645,7 @@ graph_female <- estimateNetwork(
 )
 
 ## ........................... network comparison (male & female network) ...........................
+
 set.seed(1994)
 compare_male_female <-
   NCT(
@@ -654,7 +667,8 @@ compare_male_female$nwinv.pval # 0.603
 sum(p.adjust(compare_male_female$einv.pvals$`p-value`, method = "BH") < .05) # 0
 
 ## .................. plotting networks (male & female subgroups) ..................
-tiff(width=1250, height=450, "male_female_plot.tiff")
+
+tiff(width = 1250, height = 450, "male_female_plot.tiff")
 layout(matrix(c(1, 2), 1, 2, byrow = TRUE), widths = c(2.5, 4))
 qgraph(
   graph_male$graph,
@@ -716,4 +730,3 @@ qgraph(
 )
 
 dev.off()
-
