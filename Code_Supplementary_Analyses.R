@@ -9,6 +9,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 # ---------------------------------- 1: Load libraries & packages ----------------------------------
+
 library(qgraph)
 library(igraph)
 library(bootnet)
@@ -29,6 +30,7 @@ demographic_data_replication <-
   da36532.0001 # demographic & clinical vars in here
 
 # ------------------------------------- 2: Data preparation --------------------------------------
+
 # variable names. Note that for the PSS, we reworded the positive variables for visualization to make interpretation easier
 var_names <- c(
   "Upset by something unexpected",
@@ -76,9 +78,7 @@ nrow(relevant_IDs_original) # 1252 ==> 3 people do not have at least two variabl
 ### make a data set to be used in the estimation of the network
 graph_data_original <- biomarker_data_original %>%
   select(.,
-         matches(
-           "B4QCT_EA|B4QCT_SA|B4QCT_PA|B4QCT_EN|B4QCT_PN|B4Q4"
-         )) %>%
+         matches("B4QCT_EA|B4QCT_SA|B4QCT_PA|B4QCT_EN|B4QCT_PN|B4Q4")) %>%
   `colnames<-`(var_names) %>%
   mutate_all(as.numeric) %>%
   mutate_at(recode_vars,
@@ -140,7 +140,7 @@ graph_data_replication <- biomarker_data_replication %>%
     `Physical Abuse`,
     `Sexual Abuse`,
     everything()
-  ) 
+  )
 
 graph_replication <- estimateNetwork(
   graph_data_replication,
@@ -161,8 +161,10 @@ results_case_original <-
   bootnet(graph_original, type = "case", nBoots = 1000)
 corStability(results_case) # 0.75 for edge & strength
 
-#### supplementary plot: case-dropping strength 
-tiff(filename="case_dropping_strength_original.tiff", width=600, height=400)
+#### supplementary plot: case-dropping strength
+tiff(filename = "case_dropping_strength_original.tiff",
+     width = 600,
+     height = 400)
 plot(results_case_original, statistics = "strength") +
   scale_y_continuous(breaks = seq(0.5, 1, by = 0.1), limits = c(0.5, 1)) +
   theme(
@@ -173,8 +175,10 @@ plot(results_case_original, statistics = "strength") +
   )
 dev.off()
 
-#### supplementary plot: case-dropping edge 
-tiff(filename="case_dropping_edge_original.tiff", width=600, height=400)
+#### supplementary plot: case-dropping edge
+tiff(filename = "case_dropping_edge_original.tiff",
+     width = 600,
+     height = 400)
 plot(results_case_original, statistics = c("edge")) +
   scale_y_continuous(breaks = seq(0.5, 1, by = 0.1), limits = c(0.5, 1)) +
   theme(
@@ -190,7 +194,12 @@ dev.off()
 results_boot_original <- bootnet(graph_original, nBoots = 1000)
 
 #### supplementary plot: bootstrapped edges
-tiff("bootstrapped_edges_original.tiff", height=1400, width=600, pointsize = 13)
+tiff(
+  "bootstrapped_edges_original.tiff",
+  height = 1400,
+  width = 600,
+  pointsize = 13
+)
 plot(
   results_boot_original,
   order = "sample",
@@ -202,13 +211,16 @@ plot(
 dev.off()
 
 ## .......................... replication sample ..........................
+
 ### _____________ case-drop bootstrapping _____________
 results_case_replication <-
   bootnet(graph_replication, type = "case", nBoots = 1000)
 corStability(results_case_replication) # 0.75 for edge & strength
 
-#### supplementary plot: case-dropping strength 
-tiff(filename="case_dropping_strength_replication.tiff", width=600, height=400)
+#### supplementary plot: case-dropping strength
+tiff(filename = "case_dropping_strength_replication.tiff",
+     width = 600,
+     height = 400)
 plot(results_case_replication, statistics = "strength") +
   scale_y_continuous(breaks = seq(0.5, 1, by = 0.1), limits = c(0.5, 1)) +
   theme(
@@ -219,8 +231,10 @@ plot(results_case_replication, statistics = "strength") +
   )
 dev.off()
 
-#### supplementary plot: case-dropping edge 
-tiff(filename="case_dropping_edge_replication.tiff", width=600, height=400)
+#### supplementary plot: case-dropping edge
+tiff(filename = "case_dropping_edge_replication.tiff",
+     width = 600,
+     height = 400)
 plot(results_case_replication, statistics = c("edge")) +
   scale_y_continuous(breaks = seq(0.5, 1, by = 0.1), limits = c(0.5, 1)) +
   theme(
@@ -233,10 +247,16 @@ dev.off()
 
 
 ### _____________ regular bootstrapping for edge weights _____________
-results_boot_replication <- bootnet(graph_replication, nBoots = 1000)
+results_boot_replication <-
+  bootnet(graph_replication, nBoots = 1000)
 
 # supplementary plot: bootstrapped edges
-tiff("bootstrapped_edges_replication.tiff", height=1400, width=600, pointsize = 13)
+tiff(
+  "bootstrapped_edges_replication.tiff",
+  height = 1400,
+  width = 600,
+  pointsize = 13
+)
 plot(
   results_boot_replication,
   order = "sample",
@@ -248,7 +268,14 @@ plot(
 dev.off()
 
 
-# ------------------------------------- 4: visualization of original, replication network & combined network --------------------------------------
+# ------------------------------------- 4: Visualization of original, replication network & combined network --------------------------------------
+
+### _____________ estimate communities via walktrap for original sample _____________
+wtc <-
+  walktrap.community(as.igraph(qgraph(graph_original$graph), attributes = TRUE))
+
+
+
 ### _____________ estimate communities via walktrap for replication sample _____________
 walktrap.community(as.igraph(qgraph(graph_replication$graph), attributes = TRUE))$membership
 
@@ -267,6 +294,47 @@ graph_combined <- estimateNetwork(
 walktrap.community(as.igraph(qgraph(graph_combined$graph), attributes = TRUE))$membership
 
 # ==> communities are the same across all three graphs. That's why we use the original object for grouping in the plots
+
+
+### _____________ layout for network  _____________
+layout_network <- as.matrix(data.frame(
+  x =  c(
+    0.702164557,
+    0.980149473,
+    0.202511180,
+    0.579496614,
+    0.500319086,
+    0.382166936,
+    0.265510012,
+    0.000000000,
+    1.000000000,
+    0.717622685,
+    0.270821989,
+    0.917685999,
+    0.715207072,
+    0.004062325,
+    0.440950384
+  ),
+  y = c(
+    0.88338016,
+    0.80279178,
+    0.78809824,
+    0.63657324,
+    1.00000000,
+    0.09806150,
+    0.33345000,
+    0.37831538,
+    0.32678846,
+    0.05273452,
+    0.61391449,
+    0.00000000,
+    0.41124686,
+    0.04156892,
+    0.24338861
+  )
+))
+
+
 ### _____________ supplementary plot: combined, original and replication network next to each other
 tiff(width = 1200, height = 450, "combined_plot.tiff")
 par(mfrow = c(1, 3))
