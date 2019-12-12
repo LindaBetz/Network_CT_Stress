@@ -13,7 +13,6 @@ library(qgraph)
 library(igraph)
 library(bootnet)
 library(NetworkComparisonTest)
-library(coin)
 library(purrr)
 library(dplyr)
 
@@ -163,7 +162,7 @@ results_case_original <-
 corStability(results_case) # 0.75 for edge & strength
 
 #### supplementary plot: case-dropping strength 
-#png(filename="case_dropping_strength_original.png", width=600, height=400)
+tiff(filename="case_dropping_strength_original.tiff", width=600, height=400)
 plot(results_case_original, statistics = "strength") +
   scale_y_continuous(breaks = seq(0.5, 1, by = 0.1), limits = c(0.5, 1)) +
   theme(
@@ -172,10 +171,10 @@ plot(results_case_original, statistics = "strength") +
     legend.text = element_text(size = 14),
     axis.text = element_text(size = 14)
   )
-#dev.off()
+dev.off()
 
 #### supplementary plot: case-dropping edge 
-#png(filename="case_dropping_edge_original.png", width=600, height=400)
+tiff(filename="case_dropping_edge_original.tiff", width=600, height=400)
 plot(results_case_original, statistics = c("edge")) +
   scale_y_continuous(breaks = seq(0.5, 1, by = 0.1), limits = c(0.5, 1)) +
   theme(
@@ -184,14 +183,14 @@ plot(results_case_original, statistics = c("edge")) +
     legend.text = element_text(size = 14),
     axis.text = element_text(size = 14)
   )
-#dev.off()
+dev.off()
 
 
 ### _____________ regular bootstrapping for edge weights _____________
 results_boot_original <- bootnet(graph_original, nBoots = 1000)
 
 #### supplementary plot: bootstrapped edges
-#png("bootstrapped_edges_original.png", height=1400, width=600, pointsize = 12.5)
+tiff("bootstrapped_edges_original.tiff", height=1400, width=600, pointsize = 13)
 plot(
   results_boot_original,
   order = "sample",
@@ -200,7 +199,7 @@ plot(
   legend = TRUE,
   prop0_cex = 2
 ) + theme(text = element_text(size = 13))
-#dev.off()
+dev.off()
 
 ## .......................... replication sample ..........................
 ### _____________ case-drop bootstrapping _____________
@@ -209,7 +208,7 @@ results_case_replication <-
 corStability(results_case_replication) # 0.75 for edge & strength
 
 #### supplementary plot: case-dropping strength 
-#png(filename="case_dropping_strength_replication.png", width=600, height=400)
+tiff(filename="case_dropping_strength_replication.tiff", width=600, height=400)
 plot(results_case_replication, statistics = "strength") +
   scale_y_continuous(breaks = seq(0.5, 1, by = 0.1), limits = c(0.5, 1)) +
   theme(
@@ -218,10 +217,10 @@ plot(results_case_replication, statistics = "strength") +
     legend.text = element_text(size = 14),
     axis.text = element_text(size = 14)
   )
-#dev.off()
+dev.off()
 
 #### supplementary plot: case-dropping edge 
-#png(filename="case_dropping_edge_replication.png", width=600, height=400)
+tiff(filename="case_dropping_edge_replication.tiff", width=600, height=400)
 plot(results_case_replication, statistics = c("edge")) +
   scale_y_continuous(breaks = seq(0.5, 1, by = 0.1), limits = c(0.5, 1)) +
   theme(
@@ -230,14 +229,14 @@ plot(results_case_replication, statistics = c("edge")) +
     legend.text = element_text(size = 14),
     axis.text = element_text(size = 14)
   )
-#dev.off()
+dev.off()
 
 
 ### _____________ regular bootstrapping for edge weights _____________
 results_boot_replication <- bootnet(graph_replication, nBoots = 1000)
 
-### supplementary plot: bootstrapped edges
-#png("bootstrapped_edges_replication.png", height=1400, width=600, pointsize = 12.5)
+# supplementary plot: bootstrapped edges
+tiff("bootstrapped_edges_replication.tiff", height=1400, width=600, pointsize = 13)
 plot(
   results_boot_replication,
   order = "sample",
@@ -246,7 +245,7 @@ plot(
   legend = TRUE,
   prop0_cex = 2
 ) + theme(text = element_text(size = 13))
-#dev.off()
+dev.off()
 
 
 # ------------------------------------- 4: visualization of original, replication network & combined network --------------------------------------
@@ -269,7 +268,7 @@ walktrap.community(as.igraph(qgraph(graph_combined$graph), attributes = TRUE))$m
 
 # ==> communities are the same across all three graphs. That's why we use the original object for grouping in the plots
 ### _____________ supplementary plot: combined, original and replication network next to each other
-#png(width = 1200, height = 450, "combined_plot.png")
+tiff(width = 1200, height = 450, "combined_plot.tiff")
 par(mfrow = c(1, 3))
 qgraph(
   graph_original$graph,
@@ -359,4 +358,4 @@ qgraph(
   
 )
 
-#dev.off()
+dev.off()
