@@ -9,6 +9,7 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 # ---------------------------------- 1: Load libraries & packages -----------------------------------
+
 library(qgraph)
 library(igraph)
 library(bootnet)
@@ -30,6 +31,7 @@ demographic_data_replication <-
   da36532.0001 # demographic & clinical vars in here
 
 # ---------------------------------- 2: Data preparation & sample descriptives -----------------------------------
+
 # variable names. Note that for the PSS, we reworded the positive variables for visualization to make interpretation easier
 var_names <- c(
   "Upset by something unexpected",
