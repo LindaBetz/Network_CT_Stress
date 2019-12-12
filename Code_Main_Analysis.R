@@ -77,7 +77,7 @@ nrow(relevant_IDs_original) # 1252 ==> 3 people do not have at least two variabl
 ### create data set to calculate sample statstiscs
 desc_data_original <- biomarker_data_original %>%
   left_join(demographic_data_original, by = "M2ID") %>%
-  filter(M2ID %in% relevant_IDs_original$M2ID) %>%
+  filter(M2ID %in% relevant_IDs_original$M2ID) %>% #exclude people with too many missings
   transmute(
     Age = B4ZAGE,
     Sex = ifelse(B1PRSEX.x == "(1) MALE", 1, 0),
@@ -111,7 +111,7 @@ desc_data_original <- biomarker_data_original %>%
 
 ### frequency/count data
 desc_data_original %>%
-  select(., c(Site, MIDUS_Sample, Ethnicity, Education)) %>%
+  select(., c(Ethnicity, Education)) %>%
   map(~ table(.) / sum(!is.na(.))) %>%
   map(~ round(., 3))
 
@@ -138,7 +138,7 @@ desc_data_original %>%
 graph_data_original <- biomarker_data_original %>%
   select(.,
          matches(
-           "B1PRSEX|B4QCT_EA|B4QCT_SA|B4QCT_PA|B4QCT_EN|B4QCT_PN|B4Q4"
+           "B4QCT_EA|B4QCT_SA|B4QCT_PA|B4QCT_EN|B4QCT_PN|B4Q4"
          )) %>%
   `colnames<-`(var_names) %>%
   mutate_all(as.numeric) %>%
@@ -160,7 +160,6 @@ graph_data_original <- biomarker_data_original %>%
     `Emotional Abuse`,
     `Physical Abuse`,
     `Sexual Abuse`,
-    Sex = ifelse(B1PRSEX == "(1) MALE", 1, 0),
     everything()
   )
 
@@ -243,9 +242,8 @@ desc_data_replication %>%
 
 ## .......................... Combined Sample (original + replication) ..........................
 ### _____________ descriptives for combined sample _____________
-# combine both samples into one df
 desc_combined_data <-
-  rbind.data.frame(desc_data_original, desc_data_replication)
+  rbind.data.frame(desc_data_original, desc_data_replication) # combine both samples into one df
 
 #### frequency/count data
 desc_combined_data %>%
@@ -309,11 +307,10 @@ desc_combined_data %>%
 
 ## .......................... Subgroups: Males & Female ..........................
 ### _____________ descriptives for males and females _____________
-# 0 = women, 1 = men
 #### frequency/count data
 desc_combined_data %>%
   select(., c(Sex, Ethnicity, Education)) %>%
-  split(.$Sex) %>%
+  split(.$Sex) %>% # 0 = women, 1 = men
   map(~ select(., -c("Sex"))) %>% # remove sex variable after grouping
   map(~ c(
     table(.$Ethnicity) / sum(!is.na(.$Ethnicity)),
@@ -447,7 +444,7 @@ graph_original_plot <- qgraph(
   layoutOffset = c(-0.05, 0),
   layoutScale = c(1.14, 1.05),
   label.cex = 0.99,
-  filetype = "png",
+  filetype = "tiff",
   legend.mode = "style1",
   color =  c("grey",
              "#EBCC2A",
@@ -657,7 +654,7 @@ compare_male_female$nwinv.pval # 0.603
 sum(p.adjust(compare_male_female$einv.pvals$`p-value`, method = "BH") < .05) # 0
 
 ## .................. plotting networks (male & female subgroups) ..................
-#png(width=1250, height=450, "male_female_plot.png")
+tiff(width=1250, height=450, "male_female_plot.tiff")
 layout(matrix(c(1, 2), 1, 2, byrow = TRUE), widths = c(2.5, 4))
 qgraph(
   graph_male$graph,
@@ -718,5 +715,5 @@ qgraph(
   maximum = 0.4814082
 )
 
-#dev.off()
+dev.off()
 
