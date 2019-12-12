@@ -4,7 +4,7 @@ R-code to reproduce analyses described in
 "Relationships between childhood trauma and subjective experiences of stress in the general population: a network perspective"
 by Linda T. Betz, Nora Penzel, Marlene Rosen, Joseph Kambeitz
 
-Code developed by L. Betz
+Code developed by L. Betz (linda.betz@uk-koeln.de)
 
 There are two files: 
 
@@ -24,4 +24,3 @@ MIDUS Refresher: https://doi.org/10.3886/ICPSR36532.v3
 
 
 
-Contact: linda.betz@uk-koeln.de
