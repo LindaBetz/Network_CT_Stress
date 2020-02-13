@@ -12,6 +12,9 @@ There are two files:
 
 2) Code_Supplementary_Analysis.R provides code to reproduce findings and plots reported in the supplementary file.
 
+3) Correlation matrices for the Gaussian Graphical Models reported in the paper.
+
+
 Data required for the analysis is available at https://www.icpsr.umich.edu/icpsrweb/:
 
 MIDUS Biomarker: https://doi.org/10.3886/ICPSR29282.v9
