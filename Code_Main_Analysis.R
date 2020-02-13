@@ -9,7 +9,6 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 # ---------------------------------- 1: Load libraries & packages -----------------------------------
-
 library(qgraph)
 library(igraph)
 library(bootnet)
@@ -31,7 +30,6 @@ demographic_data_replication <-
   da36532.0001 # demographic & clinical vars in here
 
 # ---------------------------------- 2: Data preparation & sample descriptives -----------------------------------
-
 # variable names. Note that for the PSS, we reworded the positive variables for visualization to make interpretation easier
 var_names <- c(
   "Upset by something unexpected",
@@ -71,10 +69,10 @@ relevant_IDs_original <- biomarker_data_original %>%
   select(.,
          matches("M2ID|B4QCT_EA|B4QCT_SA|B4QCT_PA|B4QCT_EN|B4QCT_PN|B4Q4")) %>%
   mutate(na_per_row = rowSums(is.na(.) / 15)) %>% #M2ID never missing
-  filter(na_per_row <= 13 / 15) %>% # at least two variables available
+  filter(na_per_row != 1) %>% # at least two variables available
   transmute(M2ID)
 
-nrow(relevant_IDs_original) # 1252 ==> 3 people do not have at least two variables available, we exclude them
+nrow(relevant_IDs_original) # 1252 ==> 3 people have completely missing data, we can't include them
 
 ### create data set to calculate sample statstiscs
 desc_data_original <- biomarker_data_original %>%
@@ -172,10 +170,10 @@ relevant_IDs_replication <- biomarker_data_replication %>%
            "MRID|RA4QCT_EA|RA4QCT_SA|RA4QCT_PA|RA4QCT_EN|RA4QCT_PN|RA4Q4"
          )) %>%
   mutate(na_per_row = rowSums(is.na(.) / 15)) %>% #MRID never missing
-  filter(na_per_row <= 13 / 15) %>%
+  filter(na_per_row != 1) %>%
   transmute(MRID)
 
-nrow(relevant_IDs_replication) # 862 ==> one person does not have at least two variables, we thus exclude
+nrow(relevant_IDs_replication) # 862 ==> one person has completely missing data, we can't include
 
 
 ### create data set to calculate sample statstiscs
@@ -241,7 +239,6 @@ desc_data_replication %>%
 
 
 ## .......................... Combined Sample (original + replication) ..........................
-
 ### _____________ descriptives for combined sample _____________
 desc_combined_data <-
   rbind.data.frame(desc_data_original, desc_data_replication) # combine both samples into one df
@@ -308,7 +305,6 @@ desc_combined_data %>%
   )
 
 ## .......................... Subgroups: Males & Female ..........................
-
 ### _____________ descriptives for males and females _____________
 #### frequency/count data
 desc_combined_data %>%
@@ -376,10 +372,9 @@ desc_combined_data %>%
     )
   )
 
+
 # ----------------------------------- 3: Network estimation & visualization ----------------------------------
-
 ## .......................... estimate network ..........................
-
 graph_original <- estimateNetwork(
   graph_data_original,
   default = "ggmModSelect",
@@ -391,13 +386,11 @@ graph_original <- estimateNetwork(
 )
 
 ## ........................... estimate communities via walktrap ..........................
-
 g <-
   as.igraph(qgraph(graph_original$graph, DoNotPlot = TRUE), attributes = TRUE)
 wtc <- walktrap.community(g)
 
 ## .......................... layout for network ..........................
-
 layout_network <- as.matrix(data.frame(
   x =  c(
     0.702164557,
@@ -436,7 +429,6 @@ layout_network <- as.matrix(data.frame(
 ))
 
 ## .......................... plot network  ..........................
-
 graph_original_plot <- qgraph(
   graph_original$graph,
   layout = layout_network,
@@ -467,9 +459,7 @@ graph_original_plot <- qgraph(
 
 
 # ----------------------------------  4: Replication Analyses -----------------------------------
-
 ## ........................... data set preparation ...........................
-
 # extract relevant variables from data set, basic "preprocessing" as above
 graph_data_replication <- biomarker_data_replication %>%
   select(.,
@@ -498,7 +488,6 @@ graph_data_replication <- biomarker_data_replication %>%
   )
 
 ## ........................... estimate replication network ...........................
-
 graph_replication <- estimateNetwork(
   graph_data_replication,
   default = "ggmModSelect",
@@ -510,7 +499,6 @@ graph_replication <- estimateNetwork(
 )
 
 ## ........................... network comparison (original & replication network) ..........................
-
 ### _____________  basic comparison: correlate the two partial correlation matrices _____________
 cor(c(graph_original$graph), c(graph_replication$graph)) # 0.9242128
 
@@ -549,7 +537,6 @@ sum(p.adjust(compare_12$einv.pvals$"p-value", "BH") < .05) # 0
 
 
 # ---------------------------------- 5: Network Comparison Sex Differences ----------------------------------
-
 ## ........................... data set preparation ..........................
 
 # here, we first merge the original and replication sample to retain sufficient power
@@ -623,7 +610,6 @@ graph_data_sex <- biomarker_data_original %>%
 
 
 ## .......................... estimate male network ..........................
-
 graph_male <- estimateNetwork(
   graph_data_sex$`1`,
   default = "ggmModSelect",
@@ -635,7 +621,6 @@ graph_male <- estimateNetwork(
 )
 
 ## ........................... estimate female network ..........................
-
 graph_female <- estimateNetwork(
   graph_data_sex$`2`,
   default = "ggmModSelect",
@@ -647,7 +632,6 @@ graph_female <- estimateNetwork(
 )
 
 ## ........................... network comparison (male & female network) ...........................
-
 set.seed(1994)
 compare_male_female <-
   NCT(
@@ -669,7 +653,6 @@ compare_male_female$nwinv.pval # 0.603
 sum(p.adjust(compare_male_female$einv.pvals$`p-value`, method = "BH") < .05) # 0
 
 ## .................. plotting networks (male & female subgroups) ..................
-
 tiff(width = 1250, height = 450, "male_female_plot.tiff")
 layout(matrix(c(1, 2), 1, 2, byrow = TRUE), widths = c(2.5, 4))
 qgraph(
@@ -732,3 +715,35 @@ qgraph(
 )
 
 dev.off()
+
+## ........................... moderated networks ..........................
+data_mod <- rbind.data.frame(
+  graph_data_sex$`1` %>% mutate(Sex = 0),
+  graph_data_sex$`2` %>% mutate(Sex = 1)
+) %>% na.omit(.)
+
+mgm_mod <-
+  mgm::mgm(
+    data = data_mod,
+    type = c(rep("g", 15), "c"),
+    moderators = 16,
+    threshold = "none",
+    pbar = FALSE
+  )
+
+mgm::FactorGraph(mgm_mod, 
+           labels = 1:16, 
+           PairwiseAsEdge = TRUE,
+           layout = "circle")
+
+set.seed(1)
+res_obj <- mgm::resample(object = mgm_mod, 
+                    data = data_mod, 
+                    nB = 500,
+                    pbar = FALSE)
+
+mgm::plotRes(res_obj, 
+        axis.ticks.mod = c( 0, .05, .1, .15, .2), 
+        cex.label = 1, 
+        labels =var_names, 
+        layout.width.labels = 2)
