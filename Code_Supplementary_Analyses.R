@@ -9,11 +9,11 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 
 # ---------------------------------- 1: Load libraries & packages ----------------------------------
-
 library(qgraph)
 library(igraph)
 library(bootnet)
 library(NetworkComparisonTest)
+library(EGAnet)
 library(purrr)
 library(dplyr)
 
@@ -30,7 +30,6 @@ demographic_data_replication <-
   da36532.0001 # demographic & clinical vars in here
 
 # ------------------------------------- 2: Data preparation --------------------------------------
-
 # variable names. Note that for the PSS, we reworded the positive variables for visualization to make interpretation easier
 var_names <- c(
   "Upset by something unexpected",
@@ -211,7 +210,6 @@ plot(
 dev.off()
 
 ## .......................... replication sample ..........................
-
 ### _____________ case-drop bootstrapping _____________
 results_case_replication <-
   bootnet(graph_replication, type = "case", nBoots = 1000)
@@ -268,8 +266,7 @@ plot(
 dev.off()
 
 
-# ------------------------------------- 4: Visualization of original, replication network & combined network --------------------------------------
-
+# ------------------------------------- 4: visualization of original, replication network & combined network --------------------------------------
 ### _____________ estimate communities via walktrap for original sample _____________
 wtc <-
   walktrap.community(as.igraph(qgraph(graph_original$graph), attributes = TRUE))
@@ -427,3 +424,28 @@ qgraph(
 )
 
 dev.off()
+
+# ------------------------------------- 5: Alternative community detection  --------------------------------------
+
+g <-
+  as.igraph(qgraph(graph_original$graph, DoNotPlot = TRUE), attributes = TRUE)
+
+wtc <- walktrap.community(g)
+set.seed(234)
+sgc <- spinglass.community(g)
+
+wtc$membership == sgc$membership # results are identical (walktrap vs. spinglass)
+
+ega <- EGA(graph_data_original, plot.EGA = F)
+
+recode(ega$wc,
+       `1` = 2,
+       `2` = 1,
+       `3` = 3) == wtc$membership # results are identical (walktrap vs. EGA)
+
+
+# ------------------------------------- 6: Centrality plots  --------------------------------------
+centralityPlot(qgraph(graph_original$graph), orderBy = "Strength")
+centralityPlot(qgraph(graph_replication$graph), orderBy = "Strength")
+
+
