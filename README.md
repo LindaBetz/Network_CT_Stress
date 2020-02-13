@@ -6,7 +6,7 @@ by Linda T. Betz, Nora Penzel, Marlene Rosen, Joseph Kambeitz
 
 Code developed by L. Betz (linda.betz@uk-koeln.de)
 
-There are two files: 
+There are three files: 
 
 1) Code_Main_Analysis.R provides code to reproduce findings and plots reported in the main manuscript.
 
