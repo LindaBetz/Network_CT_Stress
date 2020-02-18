@@ -7,6 +7,17 @@
 #                           - Analysis reported in supplementary material -                     #
 #                                                                                               #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+# ---------------------------------- 0: Reproducibility  -----------------------------------
+# for reproducibility, one can use the "checkpoint" package
+# in a temporal directory, it will *install* those package versions used when the script was written 
+# these versions are then used to run the script
+# to this end, a server with snapshot images of archived package versions needs to be contacted
+# for more info visit: https://mran.microsoft.com/documents/rro/reproducibility
+
+library(checkpoint)
+checkpoint("2019-11-05",
+           R.version = "3.6.1",
+           checkpointLocation = tempdir())
 
 # ---------------------------------- 1: Load libraries & packages ----------------------------------
 library(qgraph)
@@ -156,6 +167,7 @@ graph_replication <- estimateNetwork(
 ## .......................... original sample ..........................
 
 ### _____________ case-drop bootstrapping _____________
+set.seed(1)
 results_case_original <-
   bootnet(graph_original, type = "case", nBoots = 1000)
 corStability(results_case) # 0.75 for edge & strength
@@ -190,6 +202,7 @@ dev.off()
 
 
 ### _____________ regular bootstrapping for edge weights _____________
+set.seed(1)
 results_boot_original <- bootnet(graph_original, nBoots = 1000)
 
 #### supplementary plot: bootstrapped edges
@@ -211,6 +224,7 @@ dev.off()
 
 ## .......................... replication sample ..........................
 ### _____________ case-drop bootstrapping _____________
+set.seed(1)
 results_case_replication <-
   bootnet(graph_replication, type = "case", nBoots = 1000)
 corStability(results_case_replication) # 0.75 for edge & strength
@@ -245,6 +259,7 @@ dev.off()
 
 
 ### _____________ regular bootstrapping for edge weights _____________
+set.seed(1)
 results_boot_replication <-
   bootnet(graph_replication, nBoots = 1000)
 
