@@ -526,10 +526,10 @@ compare_12 <-
   )
 
 #### NCT structure differences
-compare_12$nwinv.pval #  0.783
+compare_12$nwinv.pval # 0.416
 
 #### NCT global strength
-compare_12$glstrinv.pval # 0.496
+compare_12$glstrinv.pval # 0.153
 
 #### NCT individual edges < .05 (total number of edges 105)
 sum(compare_12$einv.pvals$"p-value" < .05) # 0
