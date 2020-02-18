@@ -525,6 +525,7 @@ graph_replication_strength <-
 cor(graph_original_strength, graph_replication_strength) # 0.9562717
 
 ### _____________ NCT for differences in structure, global strength & individual edges _____________
+# NOTE: due to current lack of parallelization, this takes ~1-2 h to run on a standard PC
 set.seed(1337)
 compare_12 <-
   NCT(
@@ -643,6 +644,7 @@ graph_female <- estimateNetwork(
 )
 
 ## ........................... network comparison (male & female network) ...........................
+# NOTE: due to current lack of parallelization, this takes ~1-2 h to run on a standard PC
 set.seed(1994)
 compare_male_female <-
   NCT(
