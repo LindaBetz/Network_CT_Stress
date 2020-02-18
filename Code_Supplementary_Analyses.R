@@ -168,7 +168,10 @@ graph_replication <- estimateNetwork(
 ### _____________ case-drop bootstrapping _____________
 set.seed(123)
 results_case_original <-
-  bootnet(graph_original, type = "case", nBoots = 1000)
+  bootnet(graph_original, 
+          # nCores = 6, # depending on cores available, parallelize
+          type = "case", 
+          nBoots = 1000)
 corStability(results_case_original) # 0.75 for edge & strength
 
 #### supplementary plot: case-dropping strength
@@ -202,7 +205,9 @@ dev.off()
 
 ### _____________ regular bootstrapping for edge weights _____________
 set.seed(456)
-results_boot_original <- bootnet(graph_original, nBoots = 1000)
+results_boot_original <- bootnet(graph_original, 
+                                 # nCores = 6, # depending on cores available, parallelize
+                                 nBoots = 1000)
 
 #### supplementary plot: bootstrapped edges
 tiff(
@@ -226,7 +231,10 @@ dev.off()
 ### _____________ case-drop bootstrapping _____________
 set.seed(123)
 results_case_replication <-
-  bootnet(graph_replication, type = "case", nBoots = 1000)
+  bootnet(graph_replication, 
+          # nCores = 6, # depending on cores available, parallelize
+          type = "case", 
+          nBoots = 1000)
 corStability(results_case_replication) # 0.75 for edge & strength
 
 #### supplementary plot: case-dropping strength
@@ -261,7 +269,9 @@ dev.off()
 ### _____________ regular bootstrapping for edge weights _____________
 set.seed(456)
 results_boot_replication <-
-  bootnet(graph_replication, nBoots = 1000)
+  bootnet(graph_replication, 
+         # nCores = 6, # depending on cores available, parallelize
+          nBoots = 1000)
 
 # supplementary plot: bootstrapped edges
 tiff(
