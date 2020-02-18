@@ -657,10 +657,10 @@ compare_male_female <-
   )
 
 ### NCT global strength
-compare_male_female$glstrinv.pval # 0.044
+compare_male_female$glstrinv.pval # 0.037
 
 ### NCT Structure differences
-compare_male_female$nwinv.pval # 0.603
+compare_male_female$nwinv.pval # 0.595
 
 ### NCT quantification of differences: count significantly different edges
 sum(p.adjust(compare_male_female$einv.pvals$`p-value`, method = "BH") < .05) # 0
