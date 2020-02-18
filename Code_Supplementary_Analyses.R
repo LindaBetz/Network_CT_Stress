@@ -451,13 +451,6 @@ sgc <- spinglass.community(g)
 
 wtc$membership == sgc$membership # results are identical (walktrap vs. spinglass)
 
-ega <- EGA(graph_data_original, plot.EGA = F)
-
-recode(ega$wc,
-       `1` = 2,
-       `2` = 1,
-       `3` = 3) == wtc$membership # results are identical (walktrap vs. EGA)
-
 
 # ------------------------------------- 6: Centrality plots  --------------------------------------
 centralityPlot(qgraph(graph_original$graph), orderBy = "Strength")
