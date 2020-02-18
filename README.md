@@ -26,4 +26,4 @@ MIDUS II: https://doi.org/10.3886/ICPSR04652.v7
 MIDUS Refresher: https://doi.org/10.3886/ICPSR36532.v3
 
 
-
+For optimal reproducibility, we use the R-package "checkpoint", snapshot date November 5, 2019 (R version 3.6.1). For more information on how this works, visit https://mran.microsoft.com/documents/rro/reproducibility.
