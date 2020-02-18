@@ -402,6 +402,7 @@ g <-
 wtc <- walktrap.community(g)
 
 ## .......................... layout for network ..........................
+# for graphical stability, save layout manually
 layout_network <- as.matrix(data.frame(
   x =  c(
     0.702164557,
