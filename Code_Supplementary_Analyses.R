@@ -19,12 +19,11 @@ checkpoint("2019-11-05",
            R.version = "3.6.1",
            checkpointLocation = tempdir())
 
-# ---------------------------------- 1: Load libraries & packages ----------------------------------
+# ---------------------------------- 1: Load packages & data ----------------------------------
 library(qgraph)
 library(igraph)
 library(bootnet)
 library(NetworkComparisonTest)
-library(EGAnet)
 library(purrr)
 library(dplyr)
 
@@ -167,10 +166,10 @@ graph_replication <- estimateNetwork(
 ## .......................... original sample ..........................
 
 ### _____________ case-drop bootstrapping _____________
-set.seed(1)
+set.seed(123)
 results_case_original <-
   bootnet(graph_original, type = "case", nBoots = 1000)
-corStability(results_case) # 0.75 for edge & strength
+corStability(results_case_original) # 0.75 for edge & strength
 
 #### supplementary plot: case-dropping strength
 tiff(filename = "case_dropping_strength_original.tiff",
@@ -202,7 +201,7 @@ dev.off()
 
 
 ### _____________ regular bootstrapping for edge weights _____________
-set.seed(1)
+set.seed(456)
 results_boot_original <- bootnet(graph_original, nBoots = 1000)
 
 #### supplementary plot: bootstrapped edges
@@ -216,6 +215,7 @@ plot(
   results_boot_original,
   order = "sample",
   split0 = TRUE,
+  plot = "interval",
   labels = TRUE,
   legend = TRUE,
   prop0_cex = 2
@@ -224,7 +224,7 @@ dev.off()
 
 ## .......................... replication sample ..........................
 ### _____________ case-drop bootstrapping _____________
-set.seed(1)
+set.seed(123)
 results_case_replication <-
   bootnet(graph_replication, type = "case", nBoots = 1000)
 corStability(results_case_replication) # 0.75 for edge & strength
@@ -259,7 +259,7 @@ dev.off()
 
 
 ### _____________ regular bootstrapping for edge weights _____________
-set.seed(1)
+set.seed(456)
 results_boot_replication <-
   bootnet(graph_replication, nBoots = 1000)
 
@@ -274,6 +274,7 @@ plot(
   results_boot_replication,
   order = "sample",
   split0 = TRUE,
+  plot = "interval",
   labels = TRUE,
   legend = TRUE,
   prop0_cex = 2
@@ -440,7 +441,7 @@ qgraph(
 
 dev.off()
 
-# ------------------------------------- 5: Alternative community detection  --------------------------------------
+# ------------------------------------- 5: Alternative community detection via spinglass  --------------------------------------
 
 g <-
   as.igraph(qgraph(graph_original$graph, DoNotPlot = TRUE), attributes = TRUE)
@@ -453,7 +454,26 @@ wtc$membership == sgc$membership # results are identical (walktrap vs. spinglass
 
 
 # ------------------------------------- 6: Centrality plots  --------------------------------------
-centralityPlot(qgraph(graph_original$graph), orderBy = "Strength")
-centralityPlot(qgraph(graph_replication$graph), orderBy = "Strength")
+# original sample
+tiff(filename = "centrality_plot_original.tiff",
+     width = 400,
+     height = 250)
+centralityPlot(qgraph(
+  graph_original$graph,
+  DoNotPlot = TRUE,
+  labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10)
+),
+orderBy = "Strength")
+dev.off()
 
-
+# replication sample
+tiff(filename = "centrality_plot_replication.tiff",
+     width = 400,
+     height = 250)
+centralityPlot(qgraph(
+  graph_replication$graph,
+  DoNotPlot = TRUE,
+  labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10)
+),
+orderBy = "Strength")
+dev.off()
