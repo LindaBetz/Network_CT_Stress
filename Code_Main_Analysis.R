@@ -8,7 +8,6 @@
 #                                                                                                     #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 # ---------------------------------- 0: Reproducibility  -----------------------------------
-
 # for reproducibility, one can use the "checkpoint" package
 # in a temporal directory, it will *install* those package versions used when the script was written 
 # these versions are then used to run the script
