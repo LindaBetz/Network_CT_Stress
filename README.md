@@ -12,7 +12,7 @@ There are three files:
 
 2) Code_Supplementary_Analysis.R provides code to reproduce findings and plots reported in the supplementary file.
 
-3) Correlation matrices for the Gaussian Graphical Models reported in the paper.
+3) Partial correlation matrices for the Gaussian Graphical Models reported in the paper.
 
 
 Data required for the analysis is available at https://www.icpsr.umich.edu/icpsrweb/:
