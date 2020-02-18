@@ -726,35 +726,3 @@ qgraph(
 )
 
 dev.off()
-
-## ........................... moderated networks ..........................
-data_mod <- rbind.data.frame(
-  graph_data_sex$`1` %>% mutate(Sex = 0),
-  graph_data_sex$`2` %>% mutate(Sex = 1)
-) %>% na.omit(.)
-
-mgm_mod <-
-  mgm::mgm(
-    data = data_mod,
-    type = c(rep("g", 15), "c"),
-    moderators = 16,
-    threshold = "none",
-    pbar = FALSE
-  )
-
-mgm::FactorGraph(mgm_mod, 
-           labels = 1:16, 
-           PairwiseAsEdge = TRUE,
-           layout = "circle")
-
-set.seed(1)
-res_obj <- mgm::resample(object = mgm_mod, 
-                    data = data_mod, 
-                    nB = 500,
-                    pbar = FALSE)
-
-mgm::plotRes(res_obj, 
-        axis.ticks.mod = c( 0, .05, .1, .15, .2), 
-        cex.label = 1, 
-        labels =var_names, 
-        layout.width.labels = 2)
