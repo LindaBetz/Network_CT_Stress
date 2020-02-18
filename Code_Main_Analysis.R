@@ -7,6 +7,18 @@
 #                               - Analysis reported in main manuscript -                              #
 #                                                                                                     #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
+# ---------------------------------- 0: Reproducibility  -----------------------------------
+
+# for reproducibility, one can use the "checkpoint" package
+# in a temporal directory, it will *install* those package versions used when the script was written 
+# these versions are then used to run the script
+# to this end, a server with snapshot images of archived package versions needs to be contacted
+# for more info visit: https://mran.microsoft.com/documents/rro/reproducibility
+
+library(checkpoint)
+checkpoint("2019-11-05",
+           R.version = "3.6.1",
+           checkpointLocation = tempdir())
 
 # ---------------------------------- 1: Load libraries & packages -----------------------------------
 library(qgraph)
