@@ -485,12 +485,16 @@ qgraph(
 dev.off()
 
 # ------------------------------------- 6: Community detection via spinglass algorithm  --------------------------------------
-
+# convert qgraph object to igraph object
 g <-
   as.igraph(qgraph(graph_original$graph, DoNotPlot = TRUE), attributes = TRUE)
 
+# walktrap
 wtc <- walktrap.community(g)
+
+# spinglass
 set.seed(234)
 sgc <- spinglass.community(g)
 
+# compare communities
 wtc$membership == sgc$membership # results are identical (walktrap vs. spinglass)
