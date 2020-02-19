@@ -259,7 +259,6 @@ dev.off()
 set.seed(123)
 results_case_replication <-
   bootnet(graph_replication, 
-          nCores = 6,
           type = "case", 
           nBoots = 1000)
 
@@ -298,7 +297,6 @@ dev.off()
 set.seed(987)
 results_boot_replication <-
   bootnet(graph_replication, 
-          nCores = 6,
           nBoots = 1000)
 
 # supplementary plot: bootstrapped edges
@@ -489,5 +487,3 @@ set.seed(234)
 sgc <- spinglass.community(g)
 
 wtc$membership == sgc$membership # results are identical (walktrap vs. spinglass)
-
-
