@@ -254,7 +254,7 @@ dev.off()
 
 ## .......................... replication sample ..........................
 ### _____________ case-drop bootstrapping _____________
-set.seed(123)
+set.seed(1)
 results_case_replication <-
   bootnet(graph_replication, 
           type = "case", 
