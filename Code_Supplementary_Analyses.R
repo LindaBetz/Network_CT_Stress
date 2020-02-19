@@ -9,13 +9,13 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 # ---------------------------------- 0: Reproducibility  -----------------------------------
 # for reproducibility, one can use the "checkpoint" package
-# in a temporal directory, it will *install* those package versions used when the script was written 
+# in a temporal directory, it will *install* those package versions used when the script was written
 # these versions are then used to run the script
 # to this end, a server with snapshot images of archived package versions needs to be contacted
 # for more info visit: https://mran.microsoft.com/documents/rro/reproducibility
 
 library(checkpoint)
-checkpoint("2019-11-05",
+checkpoint(snapshotDate = "2019-11-05",
            R.version = "3.6.1",
            checkpointLocation = tempdir())
 
@@ -161,17 +161,44 @@ graph_replication <- estimateNetwork(
   corMethod = "cor"
 )
 
-# ------------------------------------- 3: Robustness Analyses --------------------------------------
+# ------------------------------------- 3: Centrality plots  --------------------------------------
+# original Sample
+tiff(filename = "centrality_plot_original.tiff",
+     width = 500,
+     height = 350)
+centralityPlot(qgraph(
+  graph_original$graph,
+  DoNotPlot = TRUE,
+  labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10)
+),
+orderBy = "Strength")
+dev.off()
+
+# Replication Sample
+tiff(filename = "centrality_plot_replication.tiff",
+     width = 500,
+     height = 350)
+centralityPlot(qgraph(
+  graph_replication$graph,
+  DoNotPlot = TRUE,
+  labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10)
+),
+orderBy = "Strength")
+dev.off()
+
+
+# ------------------------------------- 4: Robustness Analyses --------------------------------------
 
 ## .......................... original sample ..........................
 
 ### _____________ case-drop bootstrapping _____________
 set.seed(123)
 results_case_original <-
-  bootnet(graph_original, 
-          # nCores = 6, # depending on cores available, parallelize
-          type = "case", 
-          nBoots = 1000)
+  bootnet(graph_original,
+          type = "case",
+          nBoots = 1000,
+          nCores = 6)
+
 corStability(results_case_original) # 0.75 for edge & strength
 
 #### supplementary plot: case-dropping strength
@@ -204,9 +231,9 @@ dev.off()
 
 
 ### _____________ regular bootstrapping for edge weights _____________
-set.seed(456)
+set.seed(654)
 results_boot_original <- bootnet(graph_original, 
-                                 # nCores = 6, # depending on cores available, parallelize
+                                 nCores = 6,
                                  nBoots = 1000)
 
 #### supplementary plot: bootstrapped edges
@@ -232,9 +259,10 @@ dev.off()
 set.seed(123)
 results_case_replication <-
   bootnet(graph_replication, 
-          # nCores = 6, # depending on cores available, parallelize
+          nCores = 6,
           type = "case", 
           nBoots = 1000)
+
 corStability(results_case_replication) # 0.75 for edge & strength
 
 #### supplementary plot: case-dropping strength
@@ -267,10 +295,10 @@ dev.off()
 
 
 ### _____________ regular bootstrapping for edge weights _____________
-set.seed(456)
+set.seed(987)
 results_boot_replication <-
   bootnet(graph_replication, 
-         # nCores = 6, # depending on cores available, parallelize
+          nCores = 6,
           nBoots = 1000)
 
 # supplementary plot: bootstrapped edges
@@ -292,7 +320,7 @@ plot(
 dev.off()
 
 
-# ------------------------------------- 4: visualization of original, replication network & combined network --------------------------------------
+# ------------------------------------- 5: visualization of original, replication network & combined network --------------------------------------
 ### _____________ estimate communities via walktrap for original sample _____________
 wtc <-
   walktrap.community(as.igraph(qgraph(graph_original$graph), attributes = TRUE))
@@ -451,7 +479,7 @@ qgraph(
 
 dev.off()
 
-# ------------------------------------- 5: Alternative community detection via spinglass  --------------------------------------
+# ------------------------------------- 6: Community detection via spinglass algorithm  --------------------------------------
 
 g <-
   as.igraph(qgraph(graph_original$graph, DoNotPlot = TRUE), attributes = TRUE)
@@ -463,27 +491,3 @@ sgc <- spinglass.community(g)
 wtc$membership == sgc$membership # results are identical (walktrap vs. spinglass)
 
 
-# ------------------------------------- 6: Centrality plots  --------------------------------------
-# original sample
-tiff(filename = "centrality_plot_original.tiff",
-     width = 400,
-     height = 250)
-centralityPlot(qgraph(
-  graph_original$graph,
-  DoNotPlot = TRUE,
-  labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10)
-),
-orderBy = "Strength")
-dev.off()
-
-# replication sample
-tiff(filename = "centrality_plot_replication.tiff",
-     width = 400,
-     height = 250)
-centralityPlot(qgraph(
-  graph_replication$graph,
-  DoNotPlot = TRUE,
-  labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10)
-),
-orderBy = "Strength")
-dev.off()
