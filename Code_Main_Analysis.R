@@ -99,7 +99,7 @@ desc_data_original <- biomarker_data_original %>%
     Sexual_Abuse = B4QCT_SA,
     Physical_Abuse = B4QCT_PA,
     Emotional_Neglect = B4QCT_EN,
-    Phyiscal_Neglect = B4QCT_PN,
+    Physical_Neglect = B4QCT_PN,
     Ethnicity = ifelse(
       B1PF7A == "(1) WHITE",
       "White",
@@ -140,7 +140,7 @@ desc_data_original %>%
       Sexual_Abuse,
       Physical_Abuse,
       Emotional_Neglect,
-      Phyiscal_Neglect
+      Physical_Neglect
     )
   ) %>%
   summarise_all(c("mean", "sd"), na.rm = TRUE) %>%
@@ -202,7 +202,7 @@ desc_data_replication <- biomarker_data_replication %>%
     Sexual_Abuse = RA4QCT_SA,
     Physical_Abuse = RA4QCT_PA,
     Emotional_Neglect = RA4QCT_EN,
-    Phyiscal_Neglect = RA4QCT_PN,
+    Physical_Neglect = RA4QCT_PN,
     Ethnicity = ifelse(
       RA1PF7A == "(1) WHITE",
       "White",
@@ -244,7 +244,7 @@ desc_data_replication %>%
       Sexual_Abuse,
       Physical_Abuse,
       Emotional_Neglect,
-      Phyiscal_Neglect
+      Physical_Neglect
     )
   ) %>%
   summarise_all(c("mean", "sd"), na.rm = TRUE) %>%
@@ -275,7 +275,7 @@ desc_combined_data %>%
       Sexual_Abuse,
       Physical_Abuse,
       Emotional_Neglect,
-      Phyiscal_Neglect
+      Physical_Neglect
     )
   ) %>%
   summarise_all(c("mean", "sd"), na.rm = TRUE) %>%
@@ -306,7 +306,7 @@ desc_combined_data %>%
       Sexual_Abuse,
       Physical_Abuse,
       Emotional_Neglect,
-      Phyiscal_Neglect
+      Physical_Neglect
     )
   ) %>%
   map(
@@ -343,7 +343,7 @@ desc_combined_data  %>%
       Sexual_Abuse,
       Physical_Abuse,
       Emotional_Neglect,
-      Phyiscal_Neglect
+      Physical_Neglect
     )
   ) %>%  group_by(Sex) %>% # males
   summarise_all(c("mean", "sd"), na.rm = TRUE) %>%
@@ -374,7 +374,7 @@ desc_combined_data %>%
       Sexual_Abuse,
       Physical_Abuse,
       Emotional_Neglect,
-      Phyiscal_Neglect
+      Physical_Neglect
     )
   ) %>%
   map(
