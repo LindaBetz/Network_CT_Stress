@@ -8,6 +8,7 @@
 #                                                                                                     #
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 # ---------------------------------- 0: Reproducibility  -----------------------------------
+
 # for reproducibility, one can use the "checkpoint" package
 # in a temporal directory, it will *install* those package versions used when the script was written 
 # these versions are then used to run the script
@@ -15,11 +16,11 @@
 # for more info visit: https://mran.microsoft.com/documents/rro/reproducibility
 
 library(checkpoint)
-checkpoint("2019-11-05",
+checkpoint(snapshotDate = "2019-11-05",
            R.version = "3.6.1",
            checkpointLocation = tempdir())
 
-# ---------------------------------- 1: Load libraries & packages -----------------------------------
+# ---------------------------------- 1: Load packages & data -----------------------------------
 library(qgraph)
 library(igraph)
 library(bootnet)
@@ -80,7 +81,7 @@ relevant_IDs_original <- biomarker_data_original %>%
   select(.,
          matches("M2ID|B4QCT_EA|B4QCT_SA|B4QCT_PA|B4QCT_EN|B4QCT_PN|B4Q4")) %>%
   mutate(na_per_row = rowSums(is.na(.) / 15)) %>% #M2ID never missing
-  filter(na_per_row != 1) %>% # at least two variables available
+  filter(na_per_row != 1) %>% # not entirely missing data
   transmute(M2ID)
 
 nrow(relevant_IDs_original) # 1252 ==> 3 people have completely missing data, we can't include them
@@ -147,6 +148,7 @@ desc_data_original %>%
 
 ### make a data set to be used in the estimation of the network
 graph_data_original <- biomarker_data_original %>%
+  filter(M2ID %in% relevant_IDs_original$M2ID) %>%
   select(.,
          matches("B4QCT_EA|B4QCT_SA|B4QCT_PA|B4QCT_EN|B4QCT_PN|B4Q4")) %>%
   `colnames<-`(var_names) %>%
@@ -163,7 +165,7 @@ graph_data_original <- biomarker_data_original %>%
               .missing = NA_real_
             )) %>%
   select(
-    # change order of items, to make plot nicer later
+    # change order of items, to make plot nicer
     `Emotional Neglect`,
     `Physical Neglect`,
     `Emotional Abuse`,
@@ -383,7 +385,6 @@ desc_combined_data %>%
     )
   )
 
-
 # ----------------------------------- 3: Network estimation & visualization ----------------------------------
 ## .......................... estimate network ..........................
 graph_original <- estimateNetwork(
@@ -474,6 +475,7 @@ graph_original_plot <- qgraph(
 ## ........................... data set preparation ...........................
 # extract relevant variables from data set, basic "preprocessing" as above
 graph_data_replication <- biomarker_data_replication %>%
+  filter(MRID %in% relevant_IDs_replication$MRID) %>%
   select(.,
          matches("RA4QCT_EA|RA4QCT_SA|RA4QCT_PA|RA4QCT_EN|RA4QCT_PN|RA4Q4")) %>%
   `colnames<-`(var_names) %>%
@@ -490,7 +492,7 @@ graph_data_replication <- biomarker_data_replication %>%
               .missing = NA_real_
             )) %>%
   select(
-    # change order of items, to make plot nicer later
+    # change order of items, to make plot nicer
     `Emotional Neglect`,
     `Physical Neglect`,
     `Emotional Abuse`,
@@ -507,8 +509,7 @@ graph_replication <- estimateNetwork(
   stepwise = TRUE,
   missing = "pairwise",
   corArgs = list(method = "spearman"),
-  corMethod = "cor"
-)
+  corMethod = "cor")
 
 ## ........................... network comparison (original & replication network) ..........................
 ### _____________  basic comparison: correlate the two partial correlation matrices _____________
@@ -527,7 +528,7 @@ cor(graph_original_strength, graph_replication_strength) # 0.9562717
 
 ### _____________ NCT for differences in structure, global strength & individual edges _____________
 # NOTE: due to current lack of parallelization, this takes ~1-2 h to run on a standard PC
-set.seed(1337)
+set.seed(1995)
 compare_12 <-
   NCT(
     graph_original,
@@ -539,14 +540,13 @@ compare_12 <-
   )
 
 #### NCT structure differences
-compare_12$nwinv.pval # 0.416
+compare_12$nwinv.pval # 0.418
 
 #### NCT global strength
-compare_12$glstrinv.pval # 0.153
+compare_12$glstrinv.pval # 0.165
 
 #### NCT individual edges < .05 (total number of edges 105)
-sum(compare_12$einv.pvals$"p-value" < .05) # 0
-sum(p.adjust(compare_12$einv.pvals$"p-value", "BH") < .05) # 0
+sum(p.adjust(compare_15$einv.pvals$"p-value", "BH") < .05) # 0
 
 
 # ---------------------------------- 5: Network Comparison Sex Differences ----------------------------------
