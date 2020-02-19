@@ -172,6 +172,7 @@ centralityPlot(qgraph(
   labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10)
 ),
 orderBy = "Strength")
+
 dev.off()
 
 # Replication Sample
@@ -184,6 +185,7 @@ centralityPlot(qgraph(
   labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10)
 ),
 orderBy = "Strength")
+
 dev.off()
 
 
@@ -213,6 +215,7 @@ plot(results_case_original, statistics = "strength") +
     legend.text = element_text(size = 14),
     axis.text = element_text(size = 14)
   )
+
 dev.off()
 
 #### supplementary plot: case-dropping edge
@@ -227,6 +230,7 @@ plot(results_case_original, statistics = c("edge")) +
     legend.text = element_text(size = 14),
     axis.text = element_text(size = 14)
   )
+
 dev.off()
 
 
@@ -251,10 +255,10 @@ plot(
   legend = TRUE,
   prop0_cex = 2
 ) + theme(text = element_text(size = 13))
+
 dev.off()
 
 ## .......................... replication sample ..........................
-
 ### _____________ case-drop bootstrapping _____________
 results_case_replication <-
   bootnet(graph_replication, 
@@ -276,6 +280,7 @@ plot(results_case_replication, statistics = "strength") +
     legend.text = element_text(size = 14),
     axis.text = element_text(size = 14)
   )
+
 dev.off()
 
 #### supplementary plot: case-dropping edge
@@ -290,6 +295,7 @@ plot(results_case_replication, statistics = c("edge")) +
     legend.text = element_text(size = 14),
     axis.text = element_text(size = 14)
   )
+
 dev.off()
 
 
@@ -315,19 +321,19 @@ plot(
   legend = TRUE,
   prop0_cex = 2
 ) + theme(text = element_text(size = 13))
+
 dev.off()
 
 
 # ------------------------------------- 5: visualization of original, replication network & combined network --------------------------------------
-
 ### _____________ estimate communities via walktrap for original sample _____________
 wtc <-
   walktrap.community(as.igraph(qgraph(graph_original$graph, DoNotPlot = TRUE), attributes = TRUE))
 
 
-
 ### _____________ estimate communities via walktrap for replication sample _____________
 walktrap.community(as.igraph(qgraph(graph_replication$graph, DoNotPlot = TRUE), attributes = TRUE))$membership
+
 
 ### _____________ estimate combined network _____________
 graph_combined <- estimateNetwork(
@@ -479,6 +485,7 @@ qgraph(
 dev.off()
 
 # ------------------------------------- 6: Community detection via spinglass algorithm  --------------------------------------
+
 g <-
   as.igraph(qgraph(graph_original$graph, DoNotPlot = TRUE), attributes = TRUE)
 
