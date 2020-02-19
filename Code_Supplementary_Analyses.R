@@ -254,6 +254,7 @@ plot(
 dev.off()
 
 ## .......................... replication sample ..........................
+
 ### _____________ case-drop bootstrapping _____________
 results_case_replication <-
   bootnet(graph_replication, 
@@ -318,6 +319,7 @@ dev.off()
 
 
 # ------------------------------------- 5: visualization of original, replication network & combined network --------------------------------------
+
 ### _____________ estimate communities via walktrap for original sample _____________
 wtc <-
   walktrap.community(as.igraph(qgraph(graph_original$graph, DoNotPlot = TRUE), attributes = TRUE))
