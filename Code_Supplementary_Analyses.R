@@ -479,7 +479,6 @@ qgraph(
 dev.off()
 
 # ------------------------------------- 6: Community detection via spinglass algorithm  --------------------------------------
-
 g <-
   as.igraph(qgraph(graph_original$graph, DoNotPlot = TRUE), attributes = TRUE)
 
