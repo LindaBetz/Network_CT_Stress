@@ -398,8 +398,11 @@ graph_original <- estimateNetwork(
 )
 
 ## ........................... estimate communities via walktrap ..........................
+# convert qgraph object to igraph object
 g <-
   as.igraph(qgraph(graph_original$graph, DoNotPlot = TRUE), attributes = TRUE)
+
+# walktrap
 wtc <- walktrap.community(g)
 
 ## .......................... layout for network ..........................
