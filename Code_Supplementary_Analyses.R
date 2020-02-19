@@ -259,6 +259,7 @@ dev.off()
 set.seed(123)
 results_case_replication <-
   bootnet(graph_replication, 
+          nCores = 6,
           type = "case", 
           nBoots = 1000)
 
@@ -297,6 +298,7 @@ dev.off()
 set.seed(987)
 results_boot_replication <-
   bootnet(graph_replication, 
+          nCores = 8,
           nBoots = 1000)
 
 # supplementary plot: bootstrapped edges
@@ -321,12 +323,12 @@ dev.off()
 # ------------------------------------- 5: visualization of original, replication network & combined network --------------------------------------
 ### _____________ estimate communities via walktrap for original sample _____________
 wtc <-
-  walktrap.community(as.igraph(qgraph(graph_original$graph), attributes = TRUE))
+  walktrap.community(as.igraph(qgraph(graph_original$graph, DoNotPlot = TRUE), attributes = TRUE))
 
 
 
 ### _____________ estimate communities via walktrap for replication sample _____________
-walktrap.community(as.igraph(qgraph(graph_replication$graph), attributes = TRUE))$membership
+walktrap.community(as.igraph(qgraph(graph_replication$graph, DoNotPlot = TRUE), attributes = TRUE))$membership
 
 ### _____________ estimate combined network _____________
 graph_combined <- estimateNetwork(
@@ -340,7 +342,7 @@ graph_combined <- estimateNetwork(
 )
 
 ### _____________ estimate walktrap for combined sample  _____________
-walktrap.community(as.igraph(qgraph(graph_combined$graph), attributes = TRUE))$membership
+walktrap.community(as.igraph(qgraph(graph_combined$graph, DoNotPlot = TRUE), attributes = TRUE))$membership
 
 # ==> communities are the same across all three graphs. That's why we use the original object for grouping in the plots
 
