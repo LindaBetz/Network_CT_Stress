@@ -192,11 +192,12 @@ dev.off()
 ## .......................... original sample ..........................
 
 ### _____________ case-drop bootstrapping _____________
-set.seed(123)
 results_case_original <-
   bootnet(graph_original,
           type = "case",
-          nBoots = 1000)
+          nCores = 6,
+          nBoots = 1000
+         )
 
 corStability(results_case_original) # 0.75 for edge & strength
 
@@ -230,8 +231,8 @@ dev.off()
 
 
 ### _____________ regular bootstrapping for edge weights _____________
-set.seed(654)
 results_boot_original <- bootnet(graph_original, 
+                                 nCores = 6,
                                  nBoots = 1000)
 
 #### supplementary plot: bootstrapped edges
@@ -254,10 +255,10 @@ dev.off()
 
 ## .......................... replication sample ..........................
 ### _____________ case-drop bootstrapping _____________
-set.seed(1)
 results_case_replication <-
   bootnet(graph_replication, 
           type = "case", 
+          nCores = 6,
           nBoots = 1000)
 
 corStability(results_case_replication) # 0.75 for edge & strength
@@ -292,9 +293,9 @@ dev.off()
 
 
 ### _____________ regular bootstrapping for edge weights _____________
-set.seed(987)
 results_boot_replication <-
   bootnet(graph_replication, 
+          nCores = 6,
           nBoots = 1000)
 
 # supplementary plot: bootstrapped edges
