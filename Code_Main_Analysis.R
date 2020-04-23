@@ -449,6 +449,7 @@ graph_original_plot <- qgraph(
   graph_original$graph,
   layout = layout_network,
   theme = "Borkulo",
+  negDashed = TRUE,
   labels = c("EmN", "PhN", "EmA", "PhA", "SxA", 1:10),
   GLratio = 1.1,
   groups =  recode(
