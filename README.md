@@ -2,7 +2,7 @@
 
 R-code to reproduce analyses described in 
 "Relationships between childhood trauma and subjective experiences of stress in the general population: a network perspective"
-by Linda T. Betz, Nora Penzel, Marlene Rosen, Joseph Kambeitz
+by Linda T. Betz, Nora Penzel, Marlene Rosen, Joseph Kambeitz. Psychological Medicine, 2020.
 
 Code by L. Betz (linda.betz@uk-koeln.de)
 
